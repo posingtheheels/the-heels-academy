@@ -9,7 +9,7 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     const isAdmin = session && (session.user as any)?.role === "ADMIN";
 
-    const feedbacks = await prisma.feedback.findMany({
+    const feedbacks = await (prisma as any).feedback.findMany({
       where: isAdmin ? {} : { active: true },
       orderBy: { createdAt: "desc" },
     });
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "El mensaje es obligatorio" }, { status: 400 });
     }
 
-    const feedback = await prisma.feedback.create({
+    const feedback = await (prisma as any).feedback.create({
       data: {
         name,
         message,

@@ -16,7 +16,7 @@ export async function PATCH(
     const { id } = params;
     const { name, message, role, rating, imageUrl, active } = await req.json();
 
-    const feedback = await prisma.feedback.update({
+    const feedback = await (prisma as any).feedback.update({
       where: { id },
       data: {
         name,
@@ -50,7 +50,7 @@ export async function DELETE(
     const { id } = params;
 
     // First find to get the imageUrl
-    const feedback = await prisma.feedback.findUnique({ where: { id } });
+    const feedback = await (prisma as any).feedback.findUnique({ where: { id } });
 
     if (feedback?.imageUrl && feedback.imageUrl.includes("supabase.co")) {
       const parts = feedback.imageUrl.split("/");
@@ -58,7 +58,7 @@ export async function DELETE(
       await supabaseAdmin.storage.from("feedbacks").remove([fileName]);
     }
 
-    await prisma.feedback.delete({
+    await (prisma as any).feedback.delete({
       where: { id },
     });
 
