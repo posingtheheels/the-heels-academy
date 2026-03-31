@@ -1,7 +1,3 @@
-// Prisma Schema for The Heels - Posing Academy
-// Using SQLite for local development (no enum support)
-// Using PostgreSQL for production
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,30 +8,24 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Role: "USER" | "ADMIN"
-// PaymentStatus: "PAGADO" | "PENDIENTE"
-// BookingStatus: "CONFIRMADA" | "REALIZADA" | "CANCELADA" | "PENDIENTE_PAGO"
-// ClassType: "ONLINE" | "PRESENCIAL" | "AMBAS"
-
 model User {
-  id               String         @id @default(cuid())
-  name             String
-  email            String         @unique
-  phone            String?
-  password         String
-  role             String         @default("USER")
-  stripeCustomerId String?
-  notes            String?
-  category         String?
-  federation       String?
-  resetToken       String?        @unique
+  id                String         @id @default(cuid())
+  name              String
+  email             String         @unique
+  phone             String?
+  password          String
+  role              String         @default("USER")
+  stripeCustomerId  String?
+  notes             String?
+  category          String?
+  federation        String?
+  resetToken        String?        @unique
   resetTokenExpires DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-
-  userPlans        UserPlan[]
-  bookings         Booking[]
-  notifications    Notification[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  bookings          Booking[]
+  notifications     Notification[]
+  userPlans         UserPlan[]
 }
 
 model Plan {
@@ -50,7 +40,6 @@ model Plan {
   stripePriceId   String?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
-
   userPlans       UserPlan[]
 }
 
@@ -64,10 +53,9 @@ model UserPlan {
   stripeSessionId String?
   createdAt       DateTime  @default(now())
   expiresAt       DateTime?
-
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan            Plan      @relation(fields: [planId], references: [id])
   bookings        Booking[]
+  plan            Plan      @relation(fields: [planId], references: [id])
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([planId])
@@ -81,7 +69,6 @@ model Slot {
   type            String    @default("AMBAS")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-
   bookings        Booking[]
 
   @@index([dateTime])
@@ -89,22 +76,21 @@ model Slot {
 }
 
 model Booking {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   userId                String
   userPlanId            String?
   slotId                String
   dateTime              DateTime
-  modality              String   @default("PRESENCIAL")
-  status                String   @default("CONFIRMADA")
-  reminderSent          Boolean  @default(false)
+  modality              String    @default("PRESENCIAL")
+  status                String    @default("CONFIRMADA")
+  reminderSent          Boolean   @default(false)
   googleCalendarEventId String?
   notes                 String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  slot                  Slot      @relation(fields: [slotId], references: [id])
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userPlan              UserPlan? @relation(fields: [userPlanId], references: [id])
-  slot                  Slot     @relation(fields: [slotId], references: [id])
 
   @@index([userId])
   @@index([slotId])
@@ -119,7 +105,6 @@ model Notification {
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
-
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -128,12 +113,12 @@ model Notification {
 
 model Feedback {
   id        String   @id @default(cuid())
-  name      String?  // Name of the person giving feedback (optional)
-  message   String   // The actual feedback text
-  role      String?  // Optional role/title (e.g. "Alumna Bikini Fitness")
-  rating    Int      @default(5) // Optional rating (1-5)
-  imageUrl  String?  // Optional image of the person
-  active    Boolean  @default(true) // Whether to show it or not
+  name      String?
+  message   String
+  role      String?
+  rating    Int      @default(5)
+  imageUrl  String?
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

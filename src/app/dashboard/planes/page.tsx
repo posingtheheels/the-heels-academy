@@ -31,23 +31,32 @@ export default function BuyPlanPage() {
   }, []);
 
   async function handleBuy(planId: string) {
+    console.log("🚀 Iniciando handleBuy para plan:", planId);
     setPurchasing(planId);
     setError("");
     try {
-      const res = await fetch("/api/user/plans", {
+      console.log("📡 Llamando a API /api/checkout...");
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planId }),
       });
       
+      const data = await res.json();
+      console.log("📦 Respuesta de API /api/checkout:", data);
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Error al realizar la compra");
+        throw new Error(data.error || "Error al crear la sesión de pago");
       }
       
-      // Success! Go back to dashboard to see the active plan
-      router.push("/dashboard?welcome=plan-activated");
+      if (data.url) {
+        console.log("🔗 Redirigiendo a Stripe:", data.url);
+        window.location.href = data.url; // Redirect to Stripe
+      } else {
+        throw new Error("No jump URL provided");
+      }
     } catch (err: any) {
+      console.error("❌ Error en handleBuy:", err);
       setError(err.message);
     } finally {
       setPurchasing(null);
