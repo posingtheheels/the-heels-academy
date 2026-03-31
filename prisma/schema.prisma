@@ -1,0 +1,141 @@
+// Prisma Schema for The Heels - Posing Academy
+// Using SQLite for local development (no enum support)
+// Using PostgreSQL for production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Role: "USER" | "ADMIN"
+// PaymentStatus: "PAGADO" | "PENDIENTE"
+// BookingStatus: "CONFIRMADA" | "REALIZADA" | "CANCELADA" | "PENDIENTE_PAGO"
+// ClassType: "ONLINE" | "PRESENCIAL" | "AMBAS"
+
+model User {
+  id               String         @id @default(cuid())
+  name             String
+  email            String         @unique
+  phone            String?
+  password         String
+  role             String         @default("USER")
+  stripeCustomerId String?
+  notes            String?
+  category         String?
+  federation       String?
+  resetToken       String?        @unique
+  resetTokenExpires DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  userPlans        UserPlan[]
+  bookings         Booking[]
+  notifications    Notification[]
+}
+
+model Plan {
+  id              String     @id @default(cuid())
+  name            String
+  description     String?
+  price           Float
+  totalSessions   Int
+  type            String     @default("AMBAS")
+  durationMinutes Int        @default(60)
+  active          Boolean    @default(true)
+  stripePriceId   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  userPlans       UserPlan[]
+}
+
+model UserPlan {
+  id              String    @id @default(cuid())
+  userId          String
+  planId          String
+  totalSessions   Int
+  usedSessions    Int       @default(0)
+  paymentStatus   String    @default("PENDIENTE")
+  stripeSessionId String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan            Plan      @relation(fields: [planId], references: [id])
+  bookings        Booking[]
+
+  @@index([userId])
+  @@index([planId])
+}
+
+model Slot {
+  id              String    @id @default(cuid())
+  dateTime        DateTime
+  durationMinutes Int       @default(60)
+  available       Boolean   @default(true)
+  type            String    @default("AMBAS")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  bookings        Booking[]
+
+  @@index([dateTime])
+  @@index([available])
+}
+
+model Booking {
+  id                    String   @id @default(cuid())
+  userId                String
+  userPlanId            String?
+  slotId                String
+  dateTime              DateTime
+  modality              String   @default("PRESENCIAL")
+  status                String   @default("CONFIRMADA")
+  reminderSent          Boolean  @default(false)
+  googleCalendarEventId String?
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userPlan              UserPlan? @relation(fields: [userPlanId], references: [id])
+  slot                  Slot     @relation(fields: [slotId], references: [id])
+
+  @@index([userId])
+  @@index([slotId])
+  @@index([dateTime])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String?  // Name of the person giving feedback (optional)
+  message   String   // The actual feedback text
+  role      String?  // Optional role/title (e.g. "Alumna Bikini Fitness")
+  rating    Int      @default(5) // Optional rating (1-5)
+  imageUrl  String?  // Optional image of the person
+  active    Boolean  @default(true) // Whether to show it or not
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+}
