@@ -1,5 +1,6 @@
 "use client";
 
+// v1.0.1 - Borrado de bonos activo
 import { useState, useEffect } from "react";
 import { 
   ArrowLeft, Mail, Phone, Calendar, Clock, 
@@ -128,6 +129,23 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
       });
       if (!res.ok) throw new Error("Error al actualizar");
       setEditingPlanId(null);
+      await fetchAlumna();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  async function handleDeleteUserPlan(userPlanId: string) {
+    if (!confirm("¿Seguro que quieres eliminar este bono? Esta acción no se puede deshacer.")) return;
+    
+    setProcessingId(userPlanId);
+    try {
+      const res = await fetch(`/api/admin/user-plans/${userPlanId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error al eliminar el bono");
       await fetchAlumna();
     } catch (err: any) {
       alert(err.message);
@@ -365,8 +383,9 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       </div>
                     </div>
                     
-                    <div className="text-right flex items-center gap-6">
-                      <div className="space-y-1">
+                    <div className="flex items-center gap-6">
+                      {/* Used Sessions Control */}
+                      <div className="text-right space-y-1">
                         <div className="flex items-center justify-end gap-2">
                           {editingPlanId === userPlan.id ? (
                             <div className="flex items-center gap-1">
@@ -402,12 +421,29 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       
                       <div className="w-px h-8 bg-blush-50" />
                       
+                      {/* Remaining Sessions */}
                       <div className="text-right">
                         <p className="text-2xl font-heading font-bold text-charcoal leading-none">
                           {userPlan.sessionsRemaining}
                         </p>
                         <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest mt-1">Disp.</p>
                       </div>
+
+                      <div className="w-px h-8 bg-blush-50" />
+
+                      {/* Delete Button */}
+                      <button 
+                        onClick={() => handleDeleteUserPlan(userPlan.id)}
+                        disabled={processingId === userPlan.id}
+                        className="p-2.5 text-charcoal-lighter hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                        title="Eliminar Bono"
+                      >
+                        {processingId === userPlan.id ? (
+                          <div className="w-4 h-4 border-2 border-red-500/20 border-t-red-500 rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 size={16} />
+                        )}
+                      </button>
                     </div>
                   </div>
                 ))}
