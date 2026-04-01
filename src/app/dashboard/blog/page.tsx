@@ -65,8 +65,8 @@ export default function BlogPage() {
       {posts.length === 0 ? (
         <div className="card-flat bg-white py-20 text-center flex flex-col items-center gap-4">
            <BookOpen size={48} className="text-blush-200" />
-           <p className="text-charcoal-lighter font-medium">Estamos preparando los nuevos artículos semanales...</p>
-           <p className="text-xs text-charcoal-lighter/60">Vuelve el próximo lunes o jueves para el contenido generado por IA.</p>
+           <p className="text-charcoal-lighter font-medium">DIAGNÓSTICO: La base de datos no devolvió artículos (V2)</p>
+           <p className="text-xs text-charcoal-lighter/60">Si ves este mensaje, el código está actualizado pero no hay datos.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
