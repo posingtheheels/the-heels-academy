@@ -63,6 +63,15 @@ export default function BlogPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm flex items-center gap-3">
+          <BookOpen className="opacity-50" size={16} />
+          <p>
+            <span className="font-bold">Error del sistema:</span> {error}
+          </p>
+        </div>
+      )}
+
       {/* Grid of Posts */}
       {posts.length === 0 ? (
         <div className="card-flat bg-white py-20 text-center flex flex-col items-center gap-4">
