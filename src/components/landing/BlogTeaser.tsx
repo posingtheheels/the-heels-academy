@@ -25,7 +25,7 @@ export default function BlogTeaser() {
     fetchLatestPosts();
   }, []);
 
-  if (loading || posts.length === 0) return null;
+  if (loading) return null;
 
   return (
     <section id="blog-preview" className="py-24 bg-charcoal-darkest relative overflow-hidden">
@@ -46,35 +46,42 @@ export default function BlogTeaser() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {posts.map((post) => (
-            <div 
-              key={post.id}
-              className="group bg-charcoal-light/30 border border-white/5 rounded-2xl p-8 hover:border-blush-500/30 transition-all duration-300 backdrop-blur-sm"
-            >
-              <span className="text-xs font-medium text-blush-400 uppercase tracking-widest mb-4 block">
-                {post.category}
-              </span>
-              <h3 className="text-xl font-medium text-white mb-4 line-clamp-2 group-hover:text-blush-200 transition-colors">
-                {post.title}
-              </h3>
-              <p className="text-gray-400 text-sm mb-8 line-clamp-3 leading-relaxed italic">
-                "{post.excerpt?.substring(0, 100)}..."
-              </p>
-              
-              <Link 
-                href="/dashboard/blog"
-                className="inline-flex items-center gap-2 text-white font-medium group/btn"
+        {posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-8 bg-charcoal-light/20 rounded-3xl border border-white/5 border-dashed">
+            <Lock className="text-blush-400/30 mb-4" size={48} />
+            <p className="text-gray-400 font-light italic">Sincronizando el nuevo contenido para esta semana...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {posts.map((post: any) => (
+              <div 
+                key={post.id}
+                className="group bg-charcoal-light/30 border border-white/5 rounded-2xl p-8 hover:border-blush-500/30 transition-all duration-300 backdrop-blur-sm"
               >
-                <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 rounded-full border border-white/10 group-hover/btn:bg-white group-hover/btn:text-charcoal-black transition-all">
-                  <Lock size={14} className="text-blush-400 group-hover/btn:text-charcoal-black" />
-                  <span>Acceso Alumnas</span>
-                  <ArrowRight size={16} className="ml-1 opacity-50 group-hover/btn:opacity-100" />
-                </div>
-              </Link>
-            </div>
-          ))}
-        </div>
+                <span className="text-xs font-medium text-blush-400 uppercase tracking-widest mb-4 block">
+                  {post.category}
+                </span>
+                <h3 className="text-xl font-medium text-white mb-4 line-clamp-2 group-hover:text-blush-200 transition-colors">
+                  {post.title}
+                </h3>
+                <p className="text-gray-400 text-sm mb-8 line-clamp-3 leading-relaxed italic">
+                  "{post.excerpt?.substring(0, 100)}..."
+                </p>
+                
+                <Link 
+                  href="/dashboard/blog"
+                  className="inline-flex items-center gap-2 text-white font-medium group/btn"
+                >
+                  <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 rounded-full border border-white/10 group-hover/btn:bg-white group-hover/btn:text-charcoal-black transition-all">
+                    <Lock size={14} className="text-blush-400 group-hover/btn:text-charcoal-black" />
+                    <span>Acceso Alumnas</span>
+                    <ArrowRight size={16} className="ml-1 opacity-50 group-hover/btn:opacity-100" />
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-16 text-center">
           <Link
