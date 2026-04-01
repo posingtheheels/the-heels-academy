@@ -9,11 +9,14 @@ import BlogTeaser from "@/components/landing/BlogTeaser";
 import Contact from "@/components/landing/Contact";
 import Footer from "@/components/landing/Footer";
 
+export const revalidate = 0;
+
 export default function HomePage() {
   return (
     <main>
       <Navbar />
       <Hero />
+      <BlogTeaser />
       <Objectives />
       <Methodology />
       <Plans />
