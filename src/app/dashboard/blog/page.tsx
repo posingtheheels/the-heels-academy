@@ -56,7 +56,7 @@ export default function BlogPage() {
             The Heels Academy <span className="italic font-normal text-blush-200">Blog Pro</span>
           </h1>
           <p className="text-charcoal-lightest text-lg md:text-xl font-light leading-relaxed max-w-xl">
-            Tu guía de élite para la NPC & IFBB Pro League. Curiosidades, técnica de posing y preparación para competición.
+            Tu guía de élite para el mundo del culturismo. Curiosidades, técnica de posing y preparación para competición.
           </p>
         </div>
       </div>
