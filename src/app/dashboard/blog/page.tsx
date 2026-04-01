@@ -10,13 +10,20 @@ export default function BlogPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [dbInfo, setDbInfo] = useState<any>(null);
+
   useEffect(() => {
     async function fetchPosts() {
       try {
         const res = await fetch("/api/blog");
         if (res.ok) {
           const data = await res.json();
-          setPosts(data);
+          if (data.posts) {
+            setPosts(data.posts);
+            setDbInfo(data.dbStatus);
+          } else {
+            setPosts(data);
+          }
         } else {
           const errData = await res.json();
           setError(errData.error || "Error al cargar los artículos");
@@ -69,6 +76,14 @@ export default function BlogPage() {
           <p>
             <span className="font-bold">Error del sistema:</span> {error}
           </p>
+        </div>
+      )}
+
+      {dbInfo && (
+        <div className="mb-8 p-3 bg-charcoal-light/10 border border-white/5 rounded-xl text-[10px] text-charcoal-lighter/50 flex flex-wrap gap-x-6 gap-y-2">
+          <span><span className="font-bold">DATABASE_HOST:</span> {dbInfo.host}</span>
+          <span><span className="font-bold">STATUS:</span> {dbInfo.count > 0 ? "Data found" : "EMPTY TABLE"}</span>
+          <span><span className="font-bold">PROVIDER:</span> Supabase-Production</span>
         </div>
       )}
 
