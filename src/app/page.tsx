@@ -1,5 +1,6 @@
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
+import BlogTeaser from "@/components/landing/BlogTeaser";
 import Objectives from "@/components/landing/Objectives";
 import Methodology from "@/components/landing/Methodology";
 import Plans from "@/components/landing/Plans";
@@ -13,6 +14,7 @@ export default function HomePage() {
     <main>
       <Navbar />
       <Hero />
+      <BlogTeaser />
       <Objectives />
       <Methodology />
       <Plans />
