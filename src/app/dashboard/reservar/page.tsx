@@ -84,9 +84,13 @@ export default function BookingPage() {
 
   const daySlots = selectedDate ? slots.filter(slot => {
     const d = new Date(slot.dateTime);
+    const now = new Date();
+    const minDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    
     return d.getDate() === selectedDate && 
            d.getMonth() === currentMonth.getMonth() && 
-           d.getFullYear() === currentMonth.getFullYear();
+           d.getFullYear() === currentMonth.getFullYear() &&
+           d >= minDate;
   }) : [];
 
   const [selectedModality, setSelectedModality] = useState<Record<string, string>>({});

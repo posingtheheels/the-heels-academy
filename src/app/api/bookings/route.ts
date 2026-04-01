@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     const minDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     if (!isAdmin && slot.dateTime < minDate) {
       return NextResponse.json({ 
-        error: "ERROR: Las reservas deben realizarse con al menos 24 horas de antelación." 
+        error: "Debes reservar las clases con 24 horas de antelación" 
       }, { status: 400 });
     }
     
