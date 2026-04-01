@@ -15,10 +15,12 @@ import {
   Menu,
   X,
   ChevronRight,
+  BookOpen,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
+  { href: "/dashboard/blog", label: "Blog Pro", icon: BookOpen },
   { href: "/dashboard/reservar", label: "Reservar", icon: Calendar },
   { href: "/dashboard/planes", label: "Comprar Bono", icon: Sparkles },
   { href: "/dashboard/historial", label: "Historial", icon: History },
