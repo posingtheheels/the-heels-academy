@@ -73,83 +73,52 @@ export default function BlogPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm flex flex-col gap-3">
-          <div className="flex items-center gap-3 font-bold text-lg mb-1">
-            <BookOpen size={20} />
-            <h2>Error del sistema detectado</h2>
-          </div>
-          <p className="opacity-90">{error}</p>
-          {(window as any)._lastAvailableModels && (
-            <div className="mt-4 p-4 bg-black/20 rounded-xl">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-red-300/50">Modelos reconocidos por Vercel:</p>
-              <div className="flex flex-wrap gap-2">
-                {(window as any)._lastAvailableModels.map((m: string) => (
-                  <span key={m} className="px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded text-[10px]">{m}</span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {dbInfo && (
-        <div className="mb-8 p-3 bg-charcoal-light/10 border border-white/5 rounded-xl text-[10px] text-charcoal-lighter/50 flex flex-wrap gap-x-6 gap-y-2">
-          <span><span className="font-bold">DATABASE_HOST:</span> {dbInfo.host}</span>
-          <span><span className="font-bold">STATUS:</span> {dbInfo.count > 0 ? "Data found" : "EMPTY TABLE"}</span>
-          <span><span className="font-bold">PROVIDER:</span> Supabase-Production</span>
-        </div>
-      )}
-
       {/* Grid of Posts */}
       {posts.length === 0 ? (
         <div className="card-flat bg-white py-20 text-center flex flex-col items-center gap-4">
-           <BookOpen size={48} className="text-blush-200" />
-           <p className="text-charcoal-lighter font-medium">DIAGNÓSTICO: La base de datos no devolvió artículos (V2)</p>
-           <p className="text-xs text-charcoal-lighter/60">Si ves este mensaje, el código está actualizado pero no hay datos.</p>
+          <BookOpen className="text-charcoal-lighter/20" size={48} />
+          <div className="space-y-1">
+            <p className="text-charcoal-light font-medium">Próximamente nuevos artículos</p>
+            <p className="text-charcoal-lighter text-sm">Estamos preparando el mejor contenido técnico para ti.</p>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post) => (
-            <Link 
-               key={post.id} 
-               href={`/dashboard/blog/${post.slug}`}
-               className="group flex flex-col bg-white rounded-3xl overflow-hidden border border-blush-50/50 hover:shadow-elegant transition-all duration-500 hover:-translate-y-2"
+            <article 
+              key={post.id}
+              className="group bg-white rounded-[2rem] border border-charcoal-light/5 overflow-hidden hover:shadow-2xl hover:shadow-charcoal/5 transition-all duration-500 flex flex-col"
             >
-              {/* Image Placeholder/Thumbnail */}
-              <div className="relative aspect-[16/10] bg-blush-50 overflow-hidden">
-                <img 
-                  src={post.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop"} 
-                  alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-charcoal text-[10px] font-bold uppercase tracking-widest rounded-full shadow-sm">
+              <div className="p-8 flex flex-col flex-grow">
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="px-3 py-1 bg-charcoal/5 text-charcoal-light text-[10px] font-bold uppercase tracking-wider rounded-full">
                     {post.category}
                   </span>
-                </div>
-              </div>
-
-              {/* Content Card */}
-              <div className="p-6 md:p-8 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 text-charcoal-lighter text-[11px] mb-4">
-                    <Calendar size={13} />
+                  <div className="flex items-center gap-1.5 text-charcoal-lighter text-[10px]">
+                    <Calendar size={12} />
                     {new Date(post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+                  </div>
                 </div>
-                <h3 className="font-heading text-xl text-charcoal mb-4 group-hover:text-blush-600 transition-colors">
+
+                <h3 className="text-xl font-bold text-charcoal group-hover:text-gold transition-colors duration-300 mb-4 line-clamp-2">
                   {post.title}
                 </h3>
-                <p className="text-charcoal-light text-sm line-clamp-2 md:line-clamp-3 leading-relaxed mb-6 flex-1">
+
+                <p className="text-charcoal-lighter text-sm leading-relaxed mb-8 line-clamp-3">
                   {post.excerpt || post.content.substring(0, 150) + "..."}
                 </p>
-                <div className="pt-6 border-t border-blush-50 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-blush-500">
-                    Leer más
-                  </span>
-                  <ArrowRight size={16} className="text-blush-400 group-hover:translate-x-1 transition-transform" />
+
+                <div className="mt-auto pt-6 border-t border-charcoal-light/5">
+                  <Link 
+                    href={`/dashboard/blog/${post.slug}`}
+                    className="flex items-center justify-between text-gold text-xs font-bold uppercase tracking-widest group/link"
+                  >
+                    <span>Leer Reporte Completo</span>
+                    <ArrowRight className="transform group-hover/link:translate-x-1 transition-transform" size={14} />
+                  </Link>
                 </div>
               </div>
-            </Link>
+            </article>
           ))}
         </div>
       )}
