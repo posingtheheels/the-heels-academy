@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         user: { select: { id: true, name: true, email: true } },
-        slot: { select: { id: true, dateTime: true, modality: true } },
+        slot: { select: { id: true, dateTime: true, type: true } },
       },
       orderBy: { dateTime: "desc" },
     });
@@ -62,6 +62,15 @@ export async function POST(req: NextRequest) {
 
     if (!slot.available && !isAdmin) {
       return NextResponse.json({ error: "El horario ya no está disponible" }, { status: 400 });
+    }
+
+    // Restriction: At least 24 hours in advance (only for students)
+    const now = new Date();
+    const minDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    if (!isAdmin && slot.dateTime < minDate) {
+      return NextResponse.json({ 
+        error: "ERROR: Las reservas deben realizarse con al menos 24 horas de antelación." 
+      }, { status: 400 });
     }
     
     const bookingStatus = (paymentMethod === "EN_CLASE" || (isAdmin && !userPlanId)) ? "PENDIENTE_PAGO" : "CONFIRMADA";

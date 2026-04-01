@@ -9,10 +9,15 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     const availableOnly = req.nextUrl.searchParams.get("available") === "true";
     
+    const now = new Date();
+    const isAdmin = session && (session.user as any)?.role === "ADMIN";
+    
     const where: any = {};
     if (availableOnly) {
       where.available = true;
-      where.dateTime = { gte: new Date() };
+      // If not admin, must be at least 24h in advance
+      const minDate = isAdmin ? now : new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      where.dateTime = { gte: minDate };
     }
     
     const slots = await prisma.slot.findMany({
