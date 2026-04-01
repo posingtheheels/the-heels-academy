@@ -7,8 +7,10 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    
     if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      console.log("No authorization found in Blog API");
+      return NextResponse.json({ error: "Sesión no iniciada" }, { status: 401 });
     }
 
     const posts = await prisma.blogPost.findMany({
@@ -16,6 +18,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
+    console.log(`Found ${posts.length} published posts`);
     return NextResponse.json(posts);
   } catch (error) {
     console.error("Error fetching blog posts:", error);
