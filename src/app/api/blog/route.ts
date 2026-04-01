@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/blog: Fetch all posts (unfiltered for troubleshooting)
 export async function GET(req: NextRequest) {
   try {
