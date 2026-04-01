@@ -14,7 +14,19 @@ export default function Feedbacks() {
         const res = await fetch("/api/feedbacks");
         if (res.ok) {
           const data = await res.json();
-          setFeedbacks(data);
+          const sorted = data.sort((a: any, b: any) => {
+            // Extract number from "Testimonio X" if present
+            const getNum = (str: string) => {
+              const match = str.match(/Testimonio\s*(\d+)/i);
+              return match ? parseInt(match[1]) : Infinity;
+            };
+            const numA = getNum(a.message);
+            const numB = getNum(b.message);
+            
+            if (numA !== numB) return numA - numB;
+            return a.id.localeCompare(b.id);
+          });
+          setFeedbacks(sorted);
         }
       } catch (err) {
         console.error("Error fetching feedbacks:", err);

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // Public/Admin: GET feedbacks
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -11,7 +12,7 @@ export async function GET() {
 
     const feedbacks = await (prisma as any).feedback.findMany({
       where: isAdmin ? {} : { active: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
     });
     return NextResponse.json(feedbacks);
   } catch (error) {
