@@ -9,8 +9,7 @@ import { BookOpen, Calendar, ArrowRight, Sparkles, Trophy } from "lucide-react";
 export default function BlogPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [dbInfo, setDbInfo] = useState<any>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchPosts() {
@@ -18,12 +17,7 @@ export default function BlogPage() {
         const res = await fetch("/api/blog");
         if (res.ok) {
           const data = await res.json();
-          if (data.posts) {
-            setPosts(data.posts);
-            setDbInfo(data.dbStatus);
-          } else {
-            setPosts(data);
-          }
+          setPosts(data.posts || data);
         } else {
           const errData = await res.json();
           if (errData.availableModels) {
@@ -40,8 +34,6 @@ export default function BlogPage() {
     }
     fetchPosts();
   }, []);
-
-  const [error, setError] = useState("");
 
   if (loading) {
     return (
@@ -87,22 +79,29 @@ export default function BlogPage() {
           {posts.map((post) => (
             <article 
               key={post.id}
-              className="group bg-white rounded-[2rem] border border-charcoal-light/5 overflow-hidden hover:shadow-2xl hover:shadow-charcoal/5 transition-all duration-500 flex flex-col"
+              className="group bg-white rounded-[2rem] border border-charcoal-light/10 overflow-hidden hover:shadow-2xl hover:shadow-charcoal/10 transition-all duration-500 flex flex-col"
             >
-              <div className="p-8 flex flex-col flex-grow">
-                <div className="flex items-center gap-2 mb-6">
-                  <span className="px-3 py-1 bg-charcoal/5 text-charcoal-light text-[10px] font-bold uppercase tracking-wider rounded-full">
+              {/* Technical Report Header */}
+              {/* Technical Report Header - Instead of Image */}
+              <div className="h-40 bg-charcoal p-8 flex flex-col justify-end relative overflow-hidden group-hover:bg-charcoal/95 transition-colors">
+                <div className="absolute top-0 right-0 p-4 opacity-5 text-white">
+                  <BookOpen size={100} />
+                </div>
+                <div className="absolute top-6 left-8">
+                  <span className="px-3 py-1 bg-gold/20 backdrop-blur-sm text-gold text-[10px] font-bold uppercase tracking-[0.2em] rounded border border-gold/30">
                     {post.category}
                   </span>
-                  <div className="flex items-center gap-1.5 text-charcoal-lighter text-[10px]">
-                    <Calendar size={12} />
-                    {new Date(post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
-                  </div>
                 </div>
-
-                <h3 className="text-xl font-bold text-charcoal group-hover:text-gold transition-colors duration-300 mb-4 line-clamp-2">
+                <h3 className="text-white text-xl font-bold leading-tight relative z-10 group-hover:text-gold transition-colors duration-300">
                   {post.title}
                 </h3>
+              </div>
+
+              <div className="p-8 flex flex-col flex-grow">
+                <div className="flex items-center gap-2 mb-6 text-charcoal-lighter text-[10px] uppercase tracking-widest font-medium">
+                  <Calendar size={12} className="text-gold" />
+                  {new Date(post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+                </div>
 
                 <p className="text-charcoal-lighter text-sm leading-relaxed mb-8 line-clamp-3">
                   {post.excerpt || post.content.substring(0, 150) + "..."}
@@ -111,10 +110,10 @@ export default function BlogPage() {
                 <div className="mt-auto pt-6 border-t border-charcoal-light/5">
                   <Link 
                     href={`/dashboard/blog/${post.slug}`}
-                    className="flex items-center justify-between text-gold text-xs font-bold uppercase tracking-widest group/link"
+                    className="flex items-center justify-between text-gold text-[11px] font-bold uppercase tracking-[0.2em] group/link"
                   >
-                    <span>Leer Reporte Completo</span>
-                    <ArrowRight className="transform group-hover/link:translate-x-1 transition-transform" size={14} />
+                    <span>Acceder al Reporte</span>
+                    <ArrowRight className="transform group-hover/link:translate-x-2 transition-transform" size={14} />
                   </Link>
                 </div>
               </div>
