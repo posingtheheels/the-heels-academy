@@ -13,15 +13,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Sesión no iniciada" }, { status: 401 });
     }
 
-    const posts = await prisma.blogPost.findMany({
+    const posts = await (prisma as any).blogPost.findMany({
       where: { published: true },
       orderBy: { createdAt: "desc" },
     });
 
     console.log(`Found ${posts.length} published posts`);
     return NextResponse.json(posts);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching blog posts:", error);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Error interno del servidor" }, { status: 500 });
   }
 }

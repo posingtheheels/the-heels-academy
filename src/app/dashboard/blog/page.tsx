@@ -15,15 +15,21 @@ export default function BlogPage() {
         if (res.ok) {
           const data = await res.json();
           setPosts(data);
+        } else {
+          const errData = await res.json();
+          setError(errData.error || "Error al cargar los artículos");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching posts:", err);
+        setError("Error de conexión con la biblioteca");
       } finally {
         setLoading(false);
       }
     }
     fetchPosts();
   }, []);
+
+  const [error, setError] = useState("");
 
   if (loading) {
     return (

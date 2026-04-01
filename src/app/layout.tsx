@@ -29,7 +29,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es-ES">
+      <head>
+        <meta name="version" content="1.0.4-blog-pro" />
+      </head>
       <body className="font-body">
         <AuthProvider>{children}</AuthProvider>
       </body>
