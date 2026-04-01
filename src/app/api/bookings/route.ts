@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
       // Case A: Plan specified by admin 
       // Case B: Automatic selection for student (not EN_CLASE)
-      if (!finalUserPlanId && paymentMethod !== "EN_CLASE" && !isAdmin) {
+      if (!finalUserPlanId && paymentMethod !== "EN_CLASE") {
         const userPlan = await tx.userPlan.findFirst({
           where: {
             userId,
