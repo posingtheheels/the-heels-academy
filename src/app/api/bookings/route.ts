@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
           orderBy: { createdAt: "asc" },
         });
         if (userPlan) finalUserPlanId = userPlan.id;
-        else throw new Error("No tienes sesiones disponibles en tu bono.");
+        else throw new Error("No tienes ningún bono activo, si la clase es presencial tienes la opción de reservar y pagar en la clase.");
       }
 
       if (finalUserPlanId) {

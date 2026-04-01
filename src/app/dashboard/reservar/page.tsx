@@ -164,12 +164,22 @@ export default function BookingPage() {
              <p className="text-sm text-charcoal-lighter mb-8 leading-relaxed">
                {error}
              </p>
-             <button 
-               onClick={() => setError("")}
-               className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-[0.2em]"
-             >
-               Entendido
-             </button>
+             <div className="flex flex-col gap-3">
+               {error.includes("bono activo") && (
+                 <button 
+                   onClick={() => router.push("/dashboard/planes")}
+                   className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-[0.2em]"
+                 >
+                   Comprar Bono
+                 </button>
+               )}
+               <button 
+                 onClick={() => setError("")}
+                 className={error.includes("bono activo") ? "btn-secondary w-full py-4 text-xs font-bold uppercase tracking-[0.2em]" : "btn-primary w-full py-4 text-xs font-bold uppercase tracking-[0.2em]"}
+               >
+                 Entendido
+               </button>
+             </div>
           </div>
         </div>
       )}
