@@ -26,6 +26,9 @@ export default function BlogPage() {
           }
         } else {
           const errData = await res.json();
+          if (errData.availableModels) {
+            (window as any)._lastAvailableModels = errData.availableModels;
+          }
           setError(errData.error || "Error al cargar los artículos");
         }
       } catch (err: any) {
@@ -71,11 +74,22 @@ export default function BlogPage() {
       </div>
 
       {error && (
-        <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm flex items-center gap-3">
-          <BookOpen className="opacity-50" size={16} />
-          <p>
-            <span className="font-bold">Error del sistema:</span> {error}
-          </p>
+        <div className="mb-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm flex flex-col gap-3">
+          <div className="flex items-center gap-3 font-bold text-lg mb-1">
+            <BookOpen size={20} />
+            <h2>Error del sistema detectado</h2>
+          </div>
+          <p className="opacity-90">{error}</p>
+          {(window as any)._lastAvailableModels && (
+            <div className="mt-4 p-4 bg-black/20 rounded-xl">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-red-300/50">Modelos reconocidos por Vercel:</p>
+              <div className="flex flex-wrap gap-2">
+                {(window as any)._lastAvailableModels.map((m: string) => (
+                  <span key={m} className="px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded text-[10px]">{m}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
