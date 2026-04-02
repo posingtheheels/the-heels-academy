@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
           slotId,
           dateTime: slot.dateTime,
           modality: targetModality,
-          status: bookingStatus,
+          status: finalUserPlanId ? "CONFIRMADA" : (paymentMethod === "EN_CLASE" ? "PENDIENTE_PAGO" : "CONFIRMADA"),
           userPlanId: finalUserPlanId,
         },
       });
