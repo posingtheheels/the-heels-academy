@@ -11,16 +11,19 @@ export async function GET(req: NextRequest) {
     }
     
     const userId = (session.user as any)?.id;
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not found in session" }, { status: 400 });
+    }
     
     // 1. Available sessions (sum of unused sessions in all active plans)
-    const userPlans = await prisma.userPlan.findMany({
+    const paidPlans = await prisma.userPlan.findMany({
       where: {
         userId,
         paymentStatus: "PAGADO",
       },
     });
     
-    const availableSessions = userPlans.reduce(
+    const availableSessions = paidPlans.reduce(
       (acc: number, plan: any) => acc + (plan.totalSessions - plan.usedSessions), 
       0
     );
