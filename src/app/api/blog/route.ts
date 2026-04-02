@@ -10,9 +10,19 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     const isAdmin = (session?.user as any)?.role === "ADMIN";
 
+    const now = new Date();
     const posts = await prisma.blogPost.findMany({
-      where: isAdmin ? {} : { published: true },
-      orderBy: { createdAt: "desc" },
+      where: isAdmin ? {} : { 
+        published: true,
+        OR: [
+          { scheduledAt: null },
+          { scheduledAt: { lte: now } }
+        ]
+      },
+      orderBy: [
+        { scheduledAt: "desc" },
+        { createdAt: "desc" }
+      ],
     });
 
     return NextResponse.json(posts);

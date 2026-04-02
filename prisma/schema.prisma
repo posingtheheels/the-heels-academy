@@ -134,10 +134,11 @@ model BlogPost {
   excerpt   String?  @db.Text
   image     String?
   category  String   @default("Culturismo")
-  published Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  comments  Comment[] // Added
+  published   Boolean   @default(false) // Changed default to false for safety
+  scheduledAt DateTime? // Added for future scheduling
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  comments    Comment[] // Added
 
   @@index([published])
   @@index([createdAt])

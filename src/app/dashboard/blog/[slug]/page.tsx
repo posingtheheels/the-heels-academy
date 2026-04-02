@@ -48,7 +48,10 @@ export default function BlogPostDetail() {
       const res = await fetch(`/api/blog/${slug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editContent),
+        body: JSON.stringify({
+          ...editContent,
+          published: post.published
+        }),
       });
 
       if (res.ok) {
@@ -169,9 +172,17 @@ export default function BlogPostDetail() {
             <span className="px-3 py-1 bg-blush-100/50 text-blush-600 text-[10px] font-bold uppercase tracking-widest rounded-full">
               {post.category}
             </span>
-            {!post.published && (
+            {!post.published ? (
               <span className="px-3 py-1 bg-rose-500/10 text-rose-500 text-[9px] font-black uppercase tracking-[0.2em] border border-rose-500/20 rounded">
                 Borrador
+              </span>
+            ) : post.scheduledAt && new Date(post.scheduledAt) > new Date() ? (
+              <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-[0.2em] border border-blue-500/20 rounded">
+                Programado: {new Date(post.scheduledAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-[0.2em] border border-emerald-500/20 rounded">
+                Publicado
               </span>
             )}
           </div>

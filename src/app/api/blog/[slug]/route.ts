@@ -34,11 +34,57 @@ export async function PATCH(req: NextRequest, { params }: { params: { slug: stri
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { published } = await req.json();
+    const body = await req.json();
+    const { published, title, content, excerpt, category } = body;
+
+    let updateData: any = { published, title, content, excerpt, category };
+
+    // Automatic Scheduling Logic: If being published and doesn't have a date yet
+    if (published === true) {
+      const currentPost = await prisma.blogPost.findUnique({
+        where: { slug: params.slug },
+        select: { scheduledAt: true }
+      });
+
+      if (!currentPost?.scheduledAt) {
+        // Find next available Monday (1) or Thursday (4)
+        const lastPost = await prisma.blogPost.findFirst({
+          where: { 
+            published: true,
+            scheduledAt: { not: null }
+          },
+          orderBy: { scheduledAt: "desc" }
+        });
+
+        let baseDate = new Date();
+        if (lastPost?.scheduledAt && lastPost.scheduledAt > baseDate) {
+          baseDate = new Date(lastPost.scheduledAt);
+        }
+
+        let nextDate = new Date(baseDate);
+        nextDate.setHours(10, 0, 0, 0);
+        
+        let found = false;
+        for (let i = 1; i < 30; i++) {
+          nextDate.setDate(nextDate.getDate() + 1);
+          const day = nextDate.getDay();
+          if (day === 1 || day === 4) { // Monday or Thursday
+            found = true;
+            break;
+          }
+        }
+        if (found) {
+          updateData.scheduledAt = nextDate;
+        }
+      }
+    } else if (published === false) {
+      // If moving back to draft, we clear scheduling
+      updateData.scheduledAt = null;
+    }
 
     const post = await prisma.blogPost.update({
       where: { slug: params.slug },
-      data: { published },
+      data: updateData,
     });
 
     return NextResponse.json(post);
