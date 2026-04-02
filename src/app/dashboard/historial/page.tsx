@@ -156,7 +156,7 @@ function BookingCard({ booking }: { booking: any }) {
           </div>
           
           <h3 className="font-heading text-lg font-semibold text-charcoal">
-            {isOnline ? "Posing Academy (Zoom Session)" : "Posing Academy (Apex Power Gym)"}
+            {isOnline ? "Posing Academy (Sesión Online)" : "Posing Academy (Presencial)"}
           </h3>
           
           {!isOnline && (

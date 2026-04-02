@@ -162,7 +162,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                      Ubicación / Modalidad
                    </h3>
                    <p className="text-lg font-heading font-semibold text-charcoal">
-                     {isOnline ? "Enlace de Zoom (Se enviará por Mail / WhatsApp)" : "Apex Power Gym"}
+                     {isOnline ? "Sesión Online (Te contactaremos por WhatsApp)" : "Presencial (Apex Power Gym)"}
                    </p>
                    {!isOnline && (
                      <p className="text-sm text-charcoal-light mt-1">
