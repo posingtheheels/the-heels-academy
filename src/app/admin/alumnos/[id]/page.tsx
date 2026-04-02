@@ -648,7 +648,7 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                 
                 <div className="space-y-3">
                   {activePlans.length > 0 ? (
-                    activePlans.map(up => (
+                    activePlans.map((up: any) => (
                       <button 
                         key={up.id}
                         onClick={() => handleAddManualBooking(selectedSlotForBooking.id, up.id)}
