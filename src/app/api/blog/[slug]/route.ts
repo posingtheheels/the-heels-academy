@@ -25,3 +25,25 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
+
+// PATCH /api/blog/[slug]: Update a post
+export async function PATCH(req: NextRequest, { params }: { params: { slug: string } }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any)?.role !== "ADMIN") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const { published } = await req.json();
+
+    const post = await prisma.blogPost.update({
+      where: { slug: params.slug },
+      data: { published },
+    });
+
+    return NextResponse.json(post);
+  } catch (error: any) {
+    console.error("Error updating blog post:", error);
+    return NextResponse.json({ error: error?.message || "Error interno" }, { status: 500 });
+  }
+}

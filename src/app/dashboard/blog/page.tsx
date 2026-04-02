@@ -87,11 +87,17 @@ export default function BlogPage() {
                 <div className="absolute top-0 right-0 p-4 opacity-5 text-white">
                   <BookOpen size={100} />
                 </div>
-                <div className="absolute top-6 left-8">
+                <div className="absolute top-6 left-8 flex gap-2">
                   <span className="px-3 py-1 bg-gold/20 backdrop-blur-sm text-gold text-[10px] font-bold uppercase tracking-[0.2em] rounded border border-gold/30">
                     {post.category}
                   </span>
+                  {!post.published && (
+                    <span className="px-3 py-1 bg-rose-500/20 backdrop-blur-sm text-rose-300 text-[10px] font-bold uppercase tracking-[0.2em] rounded border border-rose-500/30 animate-pulse">
+                      Borrador
+                    </span>
+                  )}
                 </div>
+
                 <h3 className="text-white text-xl font-bold leading-tight relative z-10 group-hover:text-gold transition-colors duration-300">
                   {post.title}
                 </h3>

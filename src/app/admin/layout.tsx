@@ -19,6 +19,7 @@ import {
   Shield,
   List,
   MessageSquare,
+  BookOpen, // Added
 } from "lucide-react";
 
 const navItems = [
@@ -28,8 +29,10 @@ const navItems = [
   { href: "/admin/calendario", label: "Calendario", icon: Calendar },
   { href: "/admin/disponibilidad", label: "Disponibilidad", icon: Clock },
   { href: "/admin/tarifas", label: "Tarifas", icon: Tag },
+  { href: "/dashboard/blog", label: "Blog", icon: BookOpen }, // Added
   { href: "/admin/feedbacks", label: "Feedbacks", icon: MessageSquare },
 ];
+
 
 export default function AdminLayout({
   children,

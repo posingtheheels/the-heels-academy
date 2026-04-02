@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/blog: Fetch all posts (unfiltered for troubleshooting)
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    const isAdmin = (session?.user as any)?.role === "ADMIN";
+
     const posts = await prisma.blogPost.findMany({
-      where: { published: true },
+      where: isAdmin ? {} : { published: true },
       orderBy: { createdAt: "desc" },
     });
 
@@ -17,3 +21,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error?.message || "Error interno del servidor" }, { status: 500 });
   }
 }
+
