@@ -88,7 +88,7 @@ export default function BlogPage() {
                   <BookOpen size={100} />
                 </div>
                 <div className="absolute top-6 left-8 flex gap-2">
-                  <span className="px-3 py-1 bg-gold/20 backdrop-blur-sm text-gold text-[10px] font-bold uppercase tracking-[0.2em] rounded border border-gold/30">
+                  <span className="px-3 py-1 bg-white/10 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded border border-white/20">
                     {post.category}
                   </span>
                   {!post.published && (
