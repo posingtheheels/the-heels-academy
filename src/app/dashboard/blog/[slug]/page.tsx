@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Hash, Share2, Sparkles, Send, EyeOff, Edit3, Save, X } from "lucide-react";
+import { CommentSection } from "@/components/blog/CommentSection";
+
 
 export default function BlogPostDetail() {
   const { slug } = useParams();
@@ -251,9 +253,14 @@ export default function BlogPostDetail() {
           )}
         </div>
 
+        {/* Comment Section (Safe for all users to see, restricted to logged users to post) */}
+        {!isEditing && post.published && (
+          <CommentSection slug={post.slug} />
+        )}
+
         {/* Footer actions */}
         {!isEditing && (
-          <div className="mt-20 pt-10 border-t border-blush-100 flex items-center justify-between">
+          <div className="mt-10 pt-10 border-t border-blush-100 flex items-center justify-between">
              <div className="flex gap-2">
                 <button className="p-3 bg-blush-50/50 rounded-full text-blush-600 hover:bg-blush-100 transition-colors">
                   <Share2 size={18} />
