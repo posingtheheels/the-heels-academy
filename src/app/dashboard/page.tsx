@@ -20,6 +20,7 @@ export default function DashboardPage() {
     upcomingClasses: 0,
     completedClasses: 0,
     activePlan: null as any,
+    userPlans: [] as any[],
   });
   const [loading, setLoading] = useState(true);
 
@@ -91,40 +92,73 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Active Plan */}
+      {/* Previous Plans History */}
       <div className="card mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-heading text-xl text-charcoal">Plan activo</h2>
-          {stats.activePlan ? (
-             <span className="badge-success">{stats.activePlan.plan.name}</span>
-          ) : (
-            <span className="badge-warning">Sin plan</span>
-          )}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-heading text-xl text-charcoal flex items-center gap-2">
+            <CreditCard size={20} className="text-blush-400" />
+            Mis Bonos
+          </h2>
+          <Link href="/dashboard/planes" className="text-xs font-bold uppercase tracking-widest text-blush-500 hover:text-blush-600 transition-colors">
+            Comprar más
+          </Link>
         </div>
-        {!stats.activePlan ? (
-          <>
-            <p className="text-sm text-charcoal-lighter mb-6">
-              Aún no tienes un plan activo. Elige uno de nuestros bonos para empezar a reservar clases.
-            </p>
-            <Link href="/dashboard/planes" className="btn-primary inline-flex items-center gap-2">
-              <Sparkles size={14} />
-              Comprar bono
-            </Link>
-          </>
+
+        {stats.userPlans.length > 0 ? (
+          <div className="space-y-4">
+            {stats.userPlans.map((up: any) => {
+              const isExhausted = up.usedSessions >= up.totalSessions;
+              const isPending = up.paymentStatus !== "PAGADO";
+              
+              return (
+                <div 
+                  key={up.id} 
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isExhausted 
+                      ? "bg-charcoal-light/[0.02] border-blush-50 opacity-60" 
+                      : "bg-white border-blush-100 shadow-sm"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-charcoal">{up.plan.name}</p>
+                        {isExhausted ? (
+                           <span className="text-[8px] font-bold uppercase py-0.5 px-2 rounded-full border border-charcoal-lighter/30 text-charcoal-lighter">Finalizado</span>
+                        ) : isPending ? (
+                          <span className="text-[8px] font-bold uppercase py-0.5 px-2 rounded-full border border-amber-200 text-amber-500 bg-amber-50">Pago Pendiente</span>
+                        ) : (
+                          <span className="text-[8px] font-bold uppercase py-0.5 px-2 rounded-full border border-emerald-200 text-emerald-500 bg-emerald-50">Activo</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-charcoal-lighter mt-0.5">
+                        {new Date(up.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-lg font-heading font-bold text-charcoal leading-none">
+                         {up.usedSessions} / {up.totalSessions}
+                       </p>
+                       <p className="text-[9px] uppercase tracking-tighter text-charcoal-lighter">Sesiones usadas</p>
+                    </div>
+                  </div>
+                  
+                  {!isExhausted && !isPending && (
+                    <div className="w-full bg-blush-100/30 rounded-full h-1.5 overflow-hidden">
+                       <div 
+                         className="bg-blush-400 h-full transition-all duration-700" 
+                         style={{ width: `${(up.usedSessions / up.totalSessions) * 100}%` }}
+                       />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-blush-50/30 border border-blush-100">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-charcoal">{stats.activePlan.plan.name}</p>
-              <p className="text-xs text-charcoal-lighter">
-                Has usado {stats.activePlan.usedSessions} de {stats.activePlan.totalSessions} sesiones
-              </p>
-            </div>
-            <div className="w-32 bg-white rounded-full h-2 overflow-hidden border border-blush-100">
-               <div 
-                 className="bg-blush-400 h-full transition-all duration-500" 
-                 style={{ width: `${(stats.activePlan.usedSessions / stats.activePlan.totalSessions) * 100}%` }}
-               />
-            </div>
+          <div className="text-center py-8 bg-blush-50/20 rounded-2xl border border-dashed border-blush-100">
+             <p className="text-sm text-charcoal-lighter mb-4">Aún no has comprado ningún bono.</p>
+             <Link href="/dashboard/planes" className="btn-secondary text-xs py-2 px-6">Ver opciones</Link>
           </div>
         )}
       </div>

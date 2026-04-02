@@ -239,16 +239,19 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
     );
   }
 
-  // Calculate some stats
+  // Calculate stats
   const userPlans = alumna.userPlans || [];
   
-  const activePlans = userPlans.map((p: any) => ({
+  // All plans with calculated remaining sessions
+  const enrichedPlans = userPlans.map((p: any) => ({
     ...p,
-    sessionsRemaining: p.totalSessions - p.usedSessions
-  })).filter((p: any) => p.sessionsRemaining > 0);
+    sessionsRemaining: p.totalSessions - p.usedSessions,
+    isExhausted: p.usedSessions >= p.totalSessions
+  })).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const activePlans = enrichedPlans.filter((p: any) => !p.isExhausted && p.paymentStatus === "PAGADO");
 
   const completedBookings = alumna.bookings?.filter((b: any) => b.status === "REALIZADA") || [];
-  // Status was "CONFIRMADA" in seed, matching it.
   const pendingBookings = alumna.bookings?.filter((b: any) => b.status === "CONFIRMADA" || b.status === "PENDING") || [];
 
   return (
@@ -356,12 +359,12 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
 
         {/* Right Column: Main Content */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Active Plans */}
+          {/* Bonus History */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-heading text-xl text-charcoal flex items-center gap-2">
                 <Package size={20} className="text-blush-400" />
-                Planes Activos
+                Historial de Bonos
               </h3>
               <button 
                 onClick={() => setShowAddPlanModal(true)}
@@ -371,15 +374,35 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
               </button>
             </div>
 
-            {activePlans.length > 0 ? (
+            {enrichedPlans.length > 0 ? (
               <div className="space-y-4">
-                {activePlans.map((userPlan: any) => (
-                  <div key={userPlan.id} className="card border-l-4 border-l-emerald-400 shadow-sm flex items-center justify-between p-5 group">
+                {enrichedPlans.map((userPlan: any) => (
+                  <div 
+                    key={userPlan.id} 
+                    className={`card shadow-sm flex items-center justify-between p-5 group transition-all border-l-4 ${
+                      userPlan.isExhausted 
+                        ? "border-l-charcoal-light bg-charcoal-light/5 opacity-80" 
+                        : userPlan.paymentStatus === "PAGADO" 
+                          ? "border-l-emerald-400" 
+                          : "border-l-amber-400"
+                    }`}
+                  >
                     <div className="flex-1">
-                      <h4 className="font-semibold text-charcoal">{userPlan.plan.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-charcoal">{userPlan.plan.name}</h4>
+                        {userPlan.isExhausted ? (
+                          <span className="text-[8px] uppercase font-bold text-charcoal-lighter border border-charcoal-lighter/30 px-1.5 py-0.5 rounded">Agotado</span>
+                        ) : userPlan.paymentStatus !== "PAGADO" ? (
+                          <span className="text-[8px] uppercase font-bold text-amber-500 border border-amber-200 bg-amber-50 px-1.5 py-0.5 rounded">Pendiente Pago</span>
+                        ) : (
+                          <span className="text-[8px] uppercase font-bold text-emerald-500 border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 rounded">Activo</span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Activo</span>
-                        <span className="text-xs text-charcoal-lighter">ID: {userPlan.id.slice(-6)}</span>
+                        <span className="text-[10px] text-charcoal-lighter">
+                          Comprado: {new Date(userPlan.createdAt).toLocaleDateString('es-ES')}
+                        </span>
+                        <span className="text-xs text-charcoal-lighter/60 font-mono">ID: {userPlan.id.slice(-6).toUpperCase()}</span>
                       </div>
                     </div>
                     

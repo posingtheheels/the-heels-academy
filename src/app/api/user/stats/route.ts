@@ -42,22 +42,24 @@ export async function GET(req: NextRequest) {
       },
     });
     
-    // 4. Most recent active plan
-    const activePlan = await prisma.userPlan.findFirst({
-      where: {
-        userId,
-        paymentStatus: "PAGADO",
-        usedSessions: { lt: prisma.userPlan.fields.totalSessions },
-      },
+    // 4. All user plans for history
+    const allUserPlans = await prisma.userPlan.findMany({
+      where: { userId },
       include: { plan: true },
       orderBy: { createdAt: "desc" },
     });
+    
+    // 5. Most recent active plan
+    const activePlan = allUserPlans.find(
+      (p: any) => p.paymentStatus === "PAGADO" && p.usedSessions < p.totalSessions
+    );
     
     return NextResponse.json({
       availableSessions,
       upcomingClasses,
       completedClasses,
-      activePlan,
+      userPlans: allUserPlans,
+      activePlan: activePlan || null,
     });
   } catch (error) {
     console.error("Error fetching user stats:", error);

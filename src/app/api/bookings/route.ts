@@ -78,22 +78,44 @@ export async function POST(req: NextRequest) {
     const booking = await prisma.$transaction(async (tx: any) => {
       // 1. DEDUCT & GET MODALITY
       let finalUserPlanId = userPlanId;
-      let targetModality = modality;
+      const slotType = slot.type; // Modality required by the slot
+
+      // Determine requested modality (or default to slot type if not specified)
+      let targetModality = modality || (slotType === "AMBAS" ? "PRESENCIAL" : slotType);
 
       // Case A: Plan specified by admin 
       // Case B: Automatic selection for student (not EN_CLASE)
       if (!finalUserPlanId && paymentMethod !== "EN_CLASE") {
+        // FILTER PLANS BY MODALITY COMPATIBILITY
         const userPlan = await tx.userPlan.findFirst({
           where: {
             userId,
             paymentStatus: "PAGADO",
             usedSessions: { lt: prisma.userPlan.fields.totalSessions },
+            plan: {
+              OR: [
+                { type: "AMBAS" },
+                { type: targetModality }
+              ]
+            }
           },
           include: { plan: true },
           orderBy: { createdAt: "asc" },
         });
-        if (userPlan) finalUserPlanId = userPlan.id;
-        else throw new Error("No tienes ningún bono activo, si la clase es presencial tienes la opción de reservar y pagar en la clase.");
+
+        if (userPlan) {
+          finalUserPlanId = userPlan.id;
+        } else {
+          // No compatible plan found
+          if (targetModality === "PRESENCIAL") {
+            // It's allowed to request EN_CLASE if no plan, but if they didn't explicitly select it, we inform them
+            if (paymentMethod !== "EN_CLASE") {
+              throw new Error("ERROR: No tienes un bono compatible con esta modalidad (Presencial). Puedes reservar y pagar directamente en la clase eligiendo esa opción.");
+            }
+          } else {
+            throw new Error("ERROR: No tienes un bono activo compatible con sesiones Online. Por favor, adquiere uno para reservar.");
+          }
+        }
       }
 
       if (finalUserPlanId) {
@@ -106,19 +128,17 @@ export async function POST(req: NextRequest) {
           throw new Error("Bono no válido para esta alumna.");
         }
 
-        // If no modality provided, infer from plan
-        if (!targetModality) {
-          if (selectedPlan.plan.type !== "AMBAS") {
-            targetModality = selectedPlan.plan.type;
-          } else {
-            // If plan is AMBAS, default to slot default
-            targetModality = slot.type === "AMBAS" ? "PRESENCIAL" : slot.type;
-          }
+        // COMPATIBILITY CHECK WITH SLOT
+        const planType = selectedPlan.plan.type;
+        const isCompatible = planType === "AMBAS" || planType === targetModality;
+
+        if (!isCompatible && !isAdmin) {
+          throw new Error("ERROR: Tu bono no cumple con las características de esta modalidad.");
         }
 
-        // COMPATIBILITY CHECK
-        if (selectedPlan.plan.type !== "AMBAS" && selectedPlan.plan.type !== targetModality && !isAdmin) {
-          throw new Error("ERROR: el bono seleccionado no es compatible con esta modalidad.");
+        // Update modality from plan if specialized
+        if (targetModality === "AMBAS" && planType !== "AMBAS") {
+          targetModality = planType;
         }
 
         await tx.userPlan.update({
@@ -127,9 +147,9 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Default modality for non-plan bookings (EN_CLASE or Manual)
-      if (!targetModality) {
-        targetModality = slot.type === "AMBAS" ? "PRESENCIAL" : slot.type;
+      // Default modality for non-plan bookings
+      if (!targetModality || targetModality === "AMBAS") {
+        targetModality = slotType === "AMBAS" ? "PRESENCIAL" : slotType;
       }
 
       // 2. Create the booking

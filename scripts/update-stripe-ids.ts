@@ -3,12 +3,12 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const STRIPE_MAPPING = {
-  'clase-individual-online': 'price_1TH461F0S6rjvcaWuXe1TIGi',
-  'bono-5-clases-online': 'price_1TH46jF0S6rjvcaWkBnaumrN',
-  'bono-10-clases-online': 'price_1TH47VF0S6rjvcaWbuM70zdQ',
-  'clase-individual-presencial': 'price_1TH45dF0S6rjvcaWWGsERHEF',
-  'bono-5-clases-presencial': 'price_1TH46TF0S6rjvcaW433UiPMO',
-  'bono-10-clases-presencial': 'price_1TH47BF0S6rjvcaWyhSH5Ggn',
+  'clase-individual-online': 'price_1THfQhF0S6rjvcaWUstspP1m',
+  'bono-5-clases-online': 'price_1THfRQF0S6rjvcaWBbvrfmWq',
+  'bono-10-clases-online': 'price_1THfSDF0S6rjvcaWGLEyI05H',
+  'clase-individual-presencial': 'price_1THfR0F0S6rjvcaWMVecKdYt',
+  'bono-5-clases-presencial': 'price_1THfRrF0S6rjvcaWxfvKykxB',
+  'bono-10-clases-presencial': 'price_1THfSfF0S6rjvcaWkkmaa5LT',
 };
 
 async function main() {
