@@ -8,6 +8,7 @@ import { ArrowLeft, Clock, Calendar, Hash, Share2, Sparkles, Send, EyeOff, Edit3
 import { CommentSection } from "@/components/blog/CommentSection";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 
 export default function BlogPostDetail() {
@@ -261,10 +262,11 @@ export default function BlogPostDetail() {
                           prose-img:rounded-3xl prose-pre:bg-charcoal prose-pre:text-white">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                   h1: ({node, ...props}: any) => <h1 className="text-4xl font-heading font-light mt-12 mb-6" {...props} />,
                   h2: ({node, ...props}: any) => <h2 className="text-3xl font-heading font-light mt-10 mb-5" {...props} />,
-                  h3: ({node, ...props}: any) => <h3 className="text-2xl font-bold mt-8 mb-4" {...props} />,
+                  h3: ({node, ...props}: any) => <h3 className="text-2xl font-bold mt-8 mb-4 " {...props} />,
                   p: ({node, ...props}: any) => <p className="mb-6 leading-relaxed" {...props} />,
                   blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-blush-500 pl-6 my-8 italic text-charcoal-lighter" {...props} />,
                   ul: ({node, ...props}: any) => <ul className="list-disc pl-6 mb-6 space-y-2" {...props} />,
