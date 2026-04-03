@@ -898,6 +898,84 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
           </div>
         </div>
       )}
+
+      {/* Add Progress Log Modal */}
+      {showAddLogModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl relative animate-pop-in">
+            <button 
+              onClick={() => setShowAddLogModal(false)}
+              className="absolute top-6 right-6 text-charcoal-lighter hover:text-charcoal transition-all p-1"
+            >
+              <Plus size={24} className="rotate-45" />
+            </button>
+            <h3 className="font-heading text-2xl font-bold text-charcoal mb-2">Nuevo Registro de Evolución</h3>
+            <p className="text-sm text-charcoal-lighter mb-8">Añade feedback técnico, fotos de progreso o hitos de preparación.</p>
+
+            <form onSubmit={handleAddProgressLog} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-2">Título de la Entrada</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Check-in Posing Abril"
+                    className="input !py-3 !text-sm"
+                    value={newLog.title}
+                    onChange={(e) => setNewLog({ ...newLog, title: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-2">Categoría</label>
+                  <select
+                    className="input !py-3 !text-sm"
+                    value={newLog.category}
+                    onChange={(e) => setNewLog({ ...newLog, category: e.target.value })}
+                  >
+                    <option value="GENERAL">General</option>
+                    <option value="POSING">Posing</option>
+                    <option value="NUTRICION">Nutrición</option>
+                    <option value="ENTRENAMIENTO">Entrenamiento</option>
+                    <option value="EVOLUCION">Evolución / Fotos</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-2">Contenido Técnico / Feedback</label>
+                <textarea
+                  required
+                  placeholder="Describe los puntos clave de mejora o el estado actual de la alumna..."
+                  className="input !py-4 !text-sm min-h-[150px] leading-relaxed"
+                  value={newLog.content}
+                  onChange={(e) => setNewLog({ ...newLog, content: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-2">URL de Imagen (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  className="input !py-3 !text-sm"
+                  value={newLog.imageUrl}
+                  onChange={(e) => setNewLog({ ...newLog, imageUrl: e.target.value })}
+                />
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={processingId === "adding-log"}
+                  className="btn-primary w-full py-4 tracking-[0.2em] uppercase font-bold"
+                >
+                  {processingId === "adding-log" ? "Guardando..." : "Registrar Evolución"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
