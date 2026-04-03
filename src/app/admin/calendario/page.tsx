@@ -12,6 +12,7 @@ type SlotWithBookings = any;
 export default function AdminCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [slots, setSlots] = useState<SlotWithBookings[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
@@ -27,7 +28,8 @@ export default function AdminCalendarPage() {
       const res = await fetch(`/api/admin/calendar?month=${month}&year=${year}`);
       if (!res.ok) throw new Error("Error fetching calendar");
       const data = await res.json();
-      setSlots(data);
+      setSlots(data.slots || []);
+      setTasks(data.tasks || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -48,6 +50,16 @@ export default function AdminCalendarPage() {
     });
     return map;
   }, [slots]);
+
+  const tasksByDay = useMemo(() => {
+    const map: Record<number, any[]> = {};
+    tasks.forEach((task) => {
+      const d = new Date(task.date).getDate();
+      if (!map[d]) map[d] = [];
+      map[d].push(task);
+    });
+    return map;
+  }, [tasks]);
 
   function getDayColor(day: number) {
     const daySlots = slotsByDay[day] || [];
@@ -143,6 +155,9 @@ export default function AdminCalendarPage() {
                        {activeBookingsCount} {activeBookingsCount === 1 ? "sesión" : "sesiones"}
                      </span>
                    )}
+                   {(tasksByDay[day] || []).length > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" />
+                   )}
                  </button>
                );
              })}
@@ -161,14 +176,27 @@ export default function AdminCalendarPage() {
                 <Search size={32} className="text-blush-200 mb-4" />
                 <p className="text-sm text-charcoal-lighter max-w-xs">Selecciona un día con reservas para ver los detalles de las sesiones</p>
              </div>
-           ) : selectedSlots.length === 0 ? (
+           ) : (selectedSlots.length === 0 && (tasksByDay[selectedDay] || []).length === 0) ? (
              <div className="card-flat bg-white border-blush-50 py-12 text-center text-charcoal-lighter">
-                No hay horarios configurados para este día.
+                No hay horarios ni tareas para este día.
              </div>
            ) : (
              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                {/* Admin Tasks */}
+                {(tasksByDay[selectedDay] || []).map(task => (
+                   <div key={task.id} className="card-flat bg-rose-50/50 border-rose-200 border-l-4 border-l-rose-500">
+                      <div className="flex items-center gap-3 mb-2">
+                         <AlertCircle size={16} className="text-rose-500" />
+                         <p className="text-sm font-bold text-charcoal">{task.title}</p>
+                      </div>
+                      <p className="text-xs text-charcoal-light mb-1">
+                         {task.description}
+                      </p>
+                   </div>
+                ))}
+                {/* Sessions */}
                 {selectedSlots.map((slot:any) => (
-                  <SlotDetailCard key={slot.id} slot={slot} />
+                   <SlotDetailCard key={slot.id} slot={slot} />
                 ))}
              </div>
            )}

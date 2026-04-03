@@ -82,7 +82,7 @@ export function CommentSection({ slug }: { slug: string }) {
     <div className="mt-20 pt-10 border-t border-blush-100">
       <div className="flex items-center gap-3 mb-10">
         <MessageSquare size={20} className="text-blush-500" />
-        <h3 className="font-heading text-2xl text-charcoal">Preguntas y Chat Pro</h3>
+        <h3 className="font-heading text-2xl text-charcoal">Preguntas y Chat</h3>
       </div>
 
       {session ? (

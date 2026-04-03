@@ -14,10 +14,11 @@ export async function GET(req: NextRequest) {
     const month = parseInt(searchParams.get("month") || "");
     const year = parseInt(searchParams.get("year") || "");
 
+    const startDate = !isNaN(month) && !isNaN(year) ? new Date(year, month - 1, 1) : undefined;
+    const endDate = !isNaN(month) && !isNaN(year) ? new Date(year, month, 0, 23, 59, 59) : undefined;
+
     const where: any = {};
-    if (!isNaN(month) && !isNaN(year)) {
-       const startDate = new Date(year, month - 1, 1);
-       const endDate = new Date(year, month, 0, 23, 59, 59);
+    if (startDate && endDate) {
        where.dateTime = {
          gte: startDate,
          lte: endDate,
@@ -36,7 +37,17 @@ export async function GET(req: NextRequest) {
       orderBy: { dateTime: "asc" },
     });
 
-    return NextResponse.json(slots);
+    const tasks = await prisma.adminTask.findMany({
+      where: startDate && endDate ? {
+        date: {
+          gte: startDate,
+          lte: endDate,
+        }
+      } : {},
+      orderBy: { date: "asc" }
+    });
+
+    return NextResponse.json({ slots, tasks });
   } catch (error) {
     console.error("Error fetching admin calendar data:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
