@@ -259,23 +259,32 @@ export default function BlogPostDetail() {
                           prose-headings:font-heading prose-headings:font-light 
                           prose-p:text-charcoal-light prose-p:leading-relaxed 
                           prose-strong:text-charcoal prose-strong:font-bold
-                          prose-img:rounded-3xl prose-pre:bg-charcoal prose-pre:text-white">
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-                components={{
-                  h1: ({node, ...props}: any) => <h1 className="text-4xl font-heading font-light mt-12 mb-6" {...props} />,
-                  h2: ({node, ...props}: any) => <h2 className="text-3xl font-heading font-light mt-10 mb-5" {...props} />,
-                  h3: ({node, ...props}: any) => <h3 className="text-2xl font-bold mt-8 mb-4 " {...props} />,
-                  p: ({node, ...props}: any) => <p className="mb-6 leading-relaxed" {...props} />,
-                  blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-blush-500 pl-6 my-8 italic text-charcoal-lighter" {...props} />,
-                  ul: ({node, ...props}: any) => <ul className="list-disc pl-6 mb-6 space-y-2" {...props} />,
-                  ol: ({node, ...props}: any) => <ol className="list-decimal pl-6 mb-6 space-y-2" {...props} />,
-                  li: ({node, ...props}: any) => <li className="text-charcoal-light" {...props} />,
-                }}
-              >
-                {post.content}
-              </ReactMarkdown>
+                          prose-img:rounded-3xl prose-pre:bg-charcoal prose-pre:text-white font-sans">
+              {post.content.includes('<p') || post.content.includes('<h') || post.content.includes('<div') ? (
+                /* Renderizado para artículos antiguos en HTML */
+                <div 
+                  className="space-y-6 text-lg" 
+                  dangerouslySetInnerHTML={{ __html: post.content }} 
+                />
+              ) : (
+                /* Renderizado para artículos nuevos en Markdown */
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                  components={{
+                    h1: ({node, ...props}: any) => <h1 className="text-4xl font-heading font-light mt-12 mb-6" {...props} />,
+                    h2: ({node, ...props}: any) => <h2 className="text-3xl font-heading font-light mt-10 mb-5" {...props} />,
+                    h3: ({node, ...props}: any) => <h3 className="text-2xl font-bold mt-8 mb-4 " {...props} />,
+                    p: ({node, ...props}: any) => <p className="mb-6 leading-relaxed" {...props} />,
+                    blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-blush-500 pl-6 my-8 italic text-charcoal-lighter" {...props} />,
+                    ul: ({node, ...props}: any) => <ul className="list-disc pl-6 mb-6 space-y-2" {...props} />,
+                    ol: ({node, ...props}: any) => <ol className="list-decimal pl-6 mb-6 space-y-2" {...props} />,
+                    li: ({node, ...props}: any) => <li className="text-charcoal-light" {...props} />,
+                  }}
+                >
+                  {post.content}
+                </ReactMarkdown>
+              )}
             </div>
           )}
         </div>
