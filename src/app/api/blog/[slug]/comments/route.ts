@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       return NextResponse.json({ error: "Post no encontrado" }, { status: 404 });
     }
 
-    const comments = await prisma.comment.findMany({
+    const comments = await (prisma as any).comment.findMany({
       where: { postId: post.id },
       include: {
         user: {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
       return NextResponse.json({ error: "Post no encontrado" }, { status: 404 });
     }
 
-    const comment = await prisma.comment.create({
+    const comment = await (prisma as any).comment.create({
       data: {
         content: content.trim(),
         postId: post.id,

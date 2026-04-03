@@ -26,7 +26,8 @@ model User {
   bookings          Booking[]
   notifications     Notification[]
   userPlans         UserPlan[]
-  comments          Comment[] // Added
+  comments          Comment[]
+  progressLogs      ProgressLog[]
 }
 
 model Plan {
@@ -170,3 +171,19 @@ model AdminTask {
   @@index([date])
 }
 
+
+model ProgressLog {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  content     String   @db.Text
+  imageUrl    String?
+  category    String   @default("GENERAL") // POSING, NUTRICION, EVOLUCION
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+}

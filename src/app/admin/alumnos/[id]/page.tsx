@@ -6,7 +6,7 @@ import {
   ArrowLeft, Mail, Phone, Calendar, Clock, 
   CreditCard, CheckCircle, AlertCircle, TrendingUp,
   Package, ChevronRight, MessageCircle, Trash2,
-  UserPlus, Plus, Trophy, Users, Key
+  UserPlus, Plus, Trophy, Users, Key, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 
@@ -30,6 +30,11 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
   
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  
+  // Progress Log State
+  const [progressLogs, setProgressLogs] = useState<any[]>([]);
+  const [showAddLogModal, setShowAddLogModal] = useState(false);
+  const [newLog, setNewLog] = useState({ title: "", content: "", category: "GENERAL", imageUrl: "" });
 
   useEffect(() => {
     if (alumna) {
@@ -86,7 +91,40 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
   useEffect(() => {
     fetchAlumna();
     fetchAdminData();
+    fetchProgressLogs();
   }, [params.id]);
+
+  async function fetchProgressLogs() {
+    try {
+      const res = await fetch(`/api/admin/progress?userId=${params.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProgressLogs(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleAddProgressLog(e: React.FormEvent) {
+    e.preventDefault();
+    setProcessingId("adding-log");
+    try {
+      const res = await fetch("/api/admin/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newLog, userId: params.id }),
+      });
+      if (!res.ok) throw new Error("Error al añadir nota de progreso");
+      setShowAddLogModal(false);
+      setNewLog({ title: "", content: "", category: "GENERAL", imageUrl: "" });
+      await fetchProgressLogs();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setProcessingId(null);
+    }
+  }
 
   async function fetchAdminData() {
     try {
@@ -555,6 +593,56 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                 >
                   Adjudicar clase manualmente
                 </button>
+              </div>
+            )}
+          </div>
+
+          {/* Progress Dossier / Evolution Log */}
+          <div className="pt-8 border-t border-blush-50">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-heading text-xl text-charcoal flex items-center gap-2">
+                <Sparkles size={20} className="text-blush-400" />
+                Dossier de Evolución
+              </h3>
+              <button 
+                onClick={() => setShowAddLogModal(true)}
+                className="btn-primary !py-2 !px-4 !text-[10px] tracking-widest flex items-center gap-2"
+              >
+                <Plus size={14} /> Nuevo Registro
+              </button>
+            </div>
+
+            {progressLogs.length > 0 ? (
+              <div className="space-y-6">
+                {progressLogs.map((log: any) => (
+                  <div key={log.id} className="card bg-white border-blush-100 p-6 hover:shadow-md transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blush-50 text-blush-600 text-[9px] font-bold uppercase tracking-widest rounded-full">
+                          {log.category}
+                        </span>
+                        <span className="text-[10px] text-charcoal-lighter uppercase font-bold tracking-widest">
+                          {new Date(log.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
+                    <h4 className="font-bold text-charcoal mb-2">{log.title}</h4>
+                    <p className="text-sm text-charcoal-light leading-relaxed whitespace-pre-wrap mb-4">
+                      {log.content}
+                    </p>
+                    {log.imageUrl && (
+                      <div className="rounded-xl overflow-hidden aspect-video border border-blush-50 max-w-sm">
+                        <img src={log.imageUrl} alt={log.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="card p-12 border-dashed border-blush-200 bg-blush-50/5 text-center">
+                <TrendingUp size={32} className="text-blush-100 mx-auto mb-3" />
+                <p className="text-sm text-charcoal-lighter font-medium">No hay registros de evolución técnica aún.</p>
+                <p className="text-xs text-charcoal-lighter/60 mt-1">Añade feedback sobre posing, nutrición o progresos aquí.</p>
               </div>
             )}
           </div>
