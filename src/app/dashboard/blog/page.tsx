@@ -3,13 +3,18 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { BookOpen, Calendar, ArrowRight, Sparkles, Trophy } from "lucide-react";
+import { BookOpen, Calendar, ArrowRight, Sparkles, Trophy, Filter, Eye, EyeOff } from "lucide-react";
 
 export default function BlogPage() {
+  const { data: session } = useSession();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState<"ALL" | "PUBLISHED" | "DRAFT">("ALL");
+
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
 
   useEffect(() => {
     async function fetchPosts() {
@@ -65,6 +70,34 @@ export default function BlogPage() {
         </div>
       </div>
 
+      {/* Admin Filters */}
+      {isAdmin && posts.length > 0 && (
+        <div className="flex items-center gap-4 mb-8 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-blush-50 w-fit">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-charcoal-lighter mr-2">
+            <Filter size={14} />
+            Filtrar:
+          </div>
+          <button 
+            onClick={() => setFilter("ALL")}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${filter === "ALL" ? "bg-charcoal text-white shadow-lg" : "text-charcoal-lighter hover:bg-blush-50"}`}
+          >
+            Todos ({posts.length})
+          </button>
+          <button 
+            onClick={() => setFilter("PUBLISHED")}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${filter === "PUBLISHED" ? "bg-emerald-500 text-white shadow-lg" : "text-charcoal-lighter hover:bg-emerald-50"}`}
+          >
+            Publicados ({posts.filter(p => p.published).length})
+          </button>
+          <button 
+            onClick={() => setFilter("DRAFT")}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${filter === "DRAFT" ? "bg-rose-500 text-white shadow-lg" : "text-charcoal-lighter hover:bg-rose-50"}`}
+          >
+            Borradores ({posts.filter(p => !p.published).length})
+          </button>
+        </div>
+      )}
+
       {/* Grid of Posts */}
       {posts.length === 0 ? (
         <div className="card-flat bg-white py-20 text-center flex flex-col items-center gap-4">
@@ -76,7 +109,13 @@ export default function BlogPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post) => (
+          {posts
+            .filter(post => {
+              if (filter === "PUBLISHED") return post.published;
+              if (filter === "DRAFT") return !post.published;
+              return true;
+            })
+            .map((post) => (
             <article 
               key={post.id}
               className="group bg-white rounded-[2rem] border border-charcoal-light/10 overflow-hidden hover:shadow-2xl hover:shadow-charcoal/10 transition-all duration-500 flex flex-col"
