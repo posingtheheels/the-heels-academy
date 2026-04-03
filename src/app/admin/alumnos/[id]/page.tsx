@@ -141,6 +141,25 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
     }
   }
 
+  async function handleDeleteProgressLog(logId: string) {
+    if (!confirm("¿Estás seguro de eliminar este registro de evolución?")) return;
+    
+    setProcessingId(`deleting-log-${logId}`);
+    try {
+      const res = await fetch(`/api/admin/progress/${logId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error al eliminar el registro");
+      
+      // Update local state
+      setProgressLogs(prev => prev.filter(l => l.id !== logId));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
   async function handleAddProgressLog(e: React.FormEvent) {
     e.preventDefault();
     setProcessingId("adding-log");
@@ -660,6 +679,17 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                           {new Date(log.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
+                      <button 
+                        onClick={() => handleDeleteProgressLog(log.id)}
+                        disabled={processingId === `deleting-log-${log.id}`}
+                        className="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                      >
+                        {processingId === `deleting-log-${log.id}` ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
                     </div>
                     <h4 className="font-bold text-charcoal mb-2">{log.title}</h4>
                     <p className="text-sm text-charcoal-light leading-relaxed whitespace-pre-wrap mb-4">
