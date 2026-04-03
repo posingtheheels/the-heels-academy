@@ -43,27 +43,7 @@ export default function StudentProgressPage() {
       {/* Header Section */}
       <header className="mb-12">
         <h1 className="font-heading text-4xl text-charcoal font-light">Evolución <span className="font-medium">Pro</span></h1>
-        <p className="text-sm text-charcoal-lighter mt-1 mb-6">Tu bitácora técnica de The Heels Academy</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="card-flat bg-white border-blush-50 p-6 flex flex-col items-center justify-center text-center">
-               <Trophy size={24} className="text-blush-400 mb-2" />
-               <p className="text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-1">Check-ins</p>
-               <p className="text-2xl font-heading font-medium text-charcoal">{logs.length}</p>
-            </div>
-            <div className="card-flat bg-white border-blush-50 p-6 flex flex-col items-center justify-center text-center">
-               <Calendar size={24} className="text-blush-400 mb-2" />
-               <p className="text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-1">Última Nota</p>
-               <p className="text-sm font-heading font-medium text-charcoal">
-                 {logs[0] ? new Date(logs[0].date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : "---"}
-               </p>
-            </div>
-            <div className="card-flat bg-gradient-to-br from-charcoal to-black p-6 flex flex-col items-center justify-center text-center text-white">
-               <Sparkles size={24} className="text-blush-200 mb-2" />
-               <p className="text-[10px] uppercase font-bold tracking-widest opacity-60 mb-1">Status</p>
-               <p className="text-xs font-bold uppercase tracking-widest">En preparación</p>
-            </div>
-        </div>
+        <p className="text-sm text-charcoal-lighter mt-1">Tu bitácora técnica de The Heels Academy</p>
       </header>
 
       {/* Timeline Section */}
