@@ -6,9 +6,10 @@ import {
   ArrowLeft, Mail, Phone, Calendar, Clock, 
   CreditCard, CheckCircle, AlertCircle, TrendingUp,
   Package, ChevronRight, MessageCircle, Trash2,
-  UserPlus, Plus, Trophy, Users, Key, Sparkles
+  UserPlus, Plus, Trophy, Users, Key, Sparkles, Loader2, X, Image as ImageIcon
 } from "lucide-react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function AlumnaFichaPage({ params }: { params: { id: string } }) {
   const [alumna, setAlumna] = useState<any>(null);
@@ -35,6 +36,40 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
   const [progressLogs, setProgressLogs] = useState<any[]>([]);
   const [showAddLogModal, setShowAddLogModal] = useState(false);
   const [newLog, setNewLog] = useState({ title: "", content: "", category: "GENERAL", imageUrl: "" });
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  async function handleImageUploadLog(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("La imagen es demasiado pesada (máximo 5MB)");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `progress-${params.id}-${Date.now()}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('feedbacks') // Usamos el mismo bucket por ahora si ya está configurado
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('feedbacks')
+        .getPublicUrl(filePath);
+
+      setNewLog({ ...newLog, imageUrl: publicUrl });
+    } catch (err: any) {
+      alert("Error subiendo imagen: " + err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  }
 
   useEffect(() => {
     if (alumna) {
@@ -953,14 +988,54 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-2">URL de Imagen (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  className="input !py-3 !text-sm"
-                  value={newLog.imageUrl}
-                  onChange={(e) => setNewLog({ ...newLog, imageUrl: e.target.value })}
-                />
+                <label className="block text-[10px] uppercase font-bold tracking-widest text-charcoal-lighter mb-2">Foto de Progreso (Opcional)</label>
+                <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-blush-50/20 border border-dashed border-blush-100 min-h-[140px]">
+                  {uploadingImage ? (
+                    <div className="text-center">
+                      <Loader2 size={24} className="animate-spin text-blush-500 mx-auto mb-2" />
+                      <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest">Subiendo...</p>
+                    </div>
+                  ) : newLog.imageUrl ? (
+                    <div className="relative group w-32 h-32">
+                      <img 
+                        src={newLog.imageUrl} 
+                        alt="Preview" 
+                        className="w-full h-full rounded-xl object-cover border border-blush-100 shadow-md"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setNewLog({...newLog, imageUrl: ""})}
+                        className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-md text-red-500 hover:text-red-600 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-12 h-12 rounded-full bg-blush-100 flex items-center justify-center mx-auto mb-2 text-blush-500">
+                        <ImageIcon size={20} />
+                      </div>
+                      <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest font-medium">JPG, PNG (Máx 5MB)</p>
+                    </div>
+                  )}
+                  <input 
+                    type="file"
+                    className="hidden"
+                    id="progress-image"
+                    autoComplete="off"
+                    accept="image/*"
+                    onChange={handleImageUploadLog}
+                    disabled={uploadingImage}
+                  />
+                  {!uploadingImage && (
+                    <label 
+                      htmlFor="progress-image"
+                      className="mt-3 text-xs text-blush-600 hover:text-blush-700 font-medium cursor-pointer py-2 px-4 rounded-full bg-white shadow-sm border border-blush-100 transition-all"
+                    >
+                      {newLog.imageUrl ? "Cambiar foto" : "Seleccionar de mi galería"}
+                    </label>
+                  )}
+                </div>
               </div>
 
               <div className="pt-4">
