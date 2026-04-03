@@ -21,8 +21,8 @@ import {
 
 const navItems = [
   { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
-  { href: "/dashboard/blog", label: "Blog Pro", icon: BookOpen },
-  { href: "/dashboard/progreso", label: "Evolución Pro", icon: TrendingUp },
+  { href: "/dashboard/blog", label: "Blog", icon: BookOpen },
+  { href: "/dashboard/progreso", label: "Evolución", icon: TrendingUp },
   { href: "/dashboard/reservar", label: "Reservar", icon: Calendar },
   { href: "/dashboard/planes", label: "Comprar Bono", icon: Sparkles },
   { href: "/dashboard/historial", label: "Historial", icon: History },

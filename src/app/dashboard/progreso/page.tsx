@@ -42,7 +42,7 @@ export default function StudentProgressPage() {
     <div className="max-w-4xl mx-auto pb-20 px-4">
       {/* Header Section */}
       <header className="mb-12">
-        <h1 className="font-heading text-4xl text-charcoal font-light">Evolución <span className="font-medium">Pro</span></h1>
+        <h1 className="font-heading text-4xl text-charcoal font-light">Evolución</h1>
         <p className="text-sm text-charcoal-lighter mt-1">Tu bitácora técnica de The Heels Academy</p>
       </header>
 
