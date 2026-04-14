@@ -174,40 +174,45 @@ export async function POST(req: NextRequest) {
     });
 
     // 4. Send Email Notification to Instructor (Async - don't block response)
-    try {
-      const { resend } = await import("@/lib/resend");
-      const formattedDate = new Date(booking.dateTime).toLocaleDateString("es-ES", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      try {
+        const { resend } = await import("@/lib/resend");
+        const { syncBookingToGoogleCalendar } = await import("@/lib/google-calendar");
+        
+        const formattedDate = new Date(booking.dateTime).toLocaleDateString("es-ES", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
-      await resend.emails.send({
-        from: "The Heels Academy <notifications@posingtheheels.com>",
-        to: "posingtheheels@gmail.com",
-        subject: `Nueva Reserva: ${session.user.name}`,
-        html: `
-          <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 40px; border-radius: 20px;">
-            <h1 style="color: #ed8796; text-align: center; font-size: 24px; margin-bottom: 30px;">¡Nueva reserva recibida!</h1>
-            <p>Hola Alejandra,</p>
-            <p>Se ha realizado una nueva reserva en <strong>The Heels Academy</strong>:</p>
-            <div style="background-color: #fce7eb; padding: 25px; border-radius: 15px; margin: 30px 0;">
-              <p style="margin: 0 0 10px 0;"><strong>Alumna:</strong> ${session.user.name} (${session.user.email})</p>
-              <p style="margin: 0 0 10px 0;"><strong>Fecha y Hora:</strong> ${formattedDate}</p>
-              <p style="margin: 0;"><strong>Modalidad:</strong> ${booking.modality}</p>
-            </div>
-            <p style="text-align: center; margin-top: 40px;">
-              <a href="https://posingtheheels.com/admin/agenda" style="background-color: #ed8796; color: white; padding: 12px 30px; text-decoration: none; border-radius: 30px; font-weight: bold;">Ver mi agenda</a>
-            </p>
-          </div>
-        `,
-      });
-    } catch (emailError) {
-      console.error("Error sending booking notification email:", emailError);
-      // We don't fail the whole request if the email fails
-    }
+        // Send Email and Sync Calendar in parallel
+        await Promise.allSettled([
+          resend.emails.send({
+            from: "The Heels Academy <notifications@posingtheheels.com>",
+            to: "posingtheheels@gmail.com",
+            subject: `Nueva Reserva: ${session.user.name}`,
+            html: `
+              <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 40px; border-radius: 20px;">
+                <h1 style="color: #ed8796; text-align: center; font-size: 24px; margin-bottom: 30px;">¡Nueva reserva recibida!</h1>
+                <p>Hola Alejandra,</p>
+                <p>Se ha nueva reserva en <strong>The Heels Academy</strong>:</p>
+                <div style="background-color: #fce7eb; padding: 25px; border-radius: 15px; margin: 30px 0;">
+                  <p style="margin: 0 0 10px 0;"><strong>Alumna:</strong> ${session.user.name} (${session.user.email})</p>
+                  <p style="margin: 0 0 10px 0;"><strong>Fecha y Hora:</strong> ${formattedDate}</p>
+                  <p style="margin: 0;"><strong>Modalidad:</strong> ${booking.modality}</p>
+                </div>
+                <p style="text-align: center; margin-top: 40px;">
+                  <a href="https://posingtheheels.com/admin/agenda" style="background-color: #ed8796; color: white; padding: 12px 30px; text-decoration: none; border-radius: 30px; font-weight: bold;">Ver mi agenda</a>
+                </p>
+              </div>
+            `,
+          }),
+          syncBookingToGoogleCalendar(booking.id)
+        ]);
+      } catch (emailError) {
+        console.error("Error in post-booking background tasks:", emailError);
+      }
     
     return NextResponse.json(booking, { status: 201 });
   } catch (error: any) {

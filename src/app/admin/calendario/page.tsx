@@ -87,11 +87,22 @@ export default function AdminCalendarPage() {
 
   return (
     <div className="max-w-6xl mx-auto pb-20">
-      <div className="mb-8">
-        <h1 className="font-heading text-4xl text-charcoal font-light">Calendario <span className="font-medium">Admin</span></h1>
-        <p className="text-sm text-charcoal-lighter mt-1 mb-6">Gestión unificada de horarios y reservas</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-4xl text-charcoal font-light">Calendario <span className="font-medium">Admin</span></h1>
+          <p className="text-sm text-charcoal-lighter mt-1">Gestión unificada de horarios y reservas</p>
+        </div>
+        
+        <a 
+          href="/api/admin/calendar/auth"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-blush-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-charcoal-light hover:bg-blush-50 transition-all shadow-sm group"
+        >
+          <Globe size={14} className="group-hover:text-sky-500 transition-colors" />
+          Conectar Google Calendar
+        </a>
+      </div>
 
-        {/* Legend */}
+      <div className="mb-8">
         <div className="flex flex-wrap gap-6 p-4 bg-white rounded-2xl border border-blush-50 shadow-sm">
           {[
             { color: "bg-emerald-500", label: "Clase Realizada" },

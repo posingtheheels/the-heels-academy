@@ -84,18 +84,17 @@ export async function PATCH(
 
       // Perform cancellation in transaction
       const cancelledBooking = await prisma.$transaction(async (tx: any) => {
+        // ... (transaction code)
         const updated = await tx.booking.update({
           where: { id: params.id },
           data: { status: "CANCELADA" },
         });
 
-        // Free up the slot
         await tx.slot.update({
           where: { id: booking.slotId },
           data: { available: true },
         });
 
-        // Return session to user plan
         if (booking.userPlanId) {
           await tx.userPlan.update({
             where: { id: booking.userPlanId },
@@ -105,6 +104,11 @@ export async function PATCH(
 
         return updated;
       });
+
+      // Background task: delete from Google Calendar
+      import("@/lib/google-calendar").then(({ deleteGoogleCalendarEvent }) => {
+        deleteGoogleCalendarEvent(params.id);
+      }).catch(console.error);
 
       return NextResponse.json(cancelledBooking);
     }
@@ -118,13 +122,11 @@ export async function PATCH(
          });
 
          if (status === "CANCELADA") {
-           // Free up the slot
            await tx.slot.update({
              where: { id: booking.slotId },
              data: { available: true },
            });
 
-           // Return session to user plan
            if (booking.userPlanId) {
              await tx.userPlan.update({
                where: { id: booking.userPlanId },
@@ -134,6 +136,14 @@ export async function PATCH(
          }
          return up;
        });
+
+       // Background task: delete from Google Calendar if cancelled
+       if (status === "CANCELADA") {
+          import("@/lib/google-calendar").then(({ deleteGoogleCalendarEvent }) => {
+            deleteGoogleCalendarEvent(params.id);
+          }).catch(console.error);
+       }
+
        return NextResponse.json(updated);
     }
 
