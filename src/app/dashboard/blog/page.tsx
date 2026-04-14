@@ -133,11 +133,11 @@ export default function BlogPage() {
             >
               {/* Technical Report Header */}
               {/* Technical Report Header - Instead of Image */}
-              <div className="h-40 bg-charcoal p-8 flex flex-col justify-end relative overflow-hidden group-hover:bg-charcoal/95 transition-colors">
+              <div className="min-h-[10rem] bg-charcoal p-6 flex flex-col justify-end relative overflow-hidden group-hover:bg-charcoal/95 transition-colors">
                 <div className="absolute top-0 right-0 p-4 opacity-5 text-white">
                   <BookOpen size={100} />
                 </div>
-                <div className="absolute top-6 left-8 flex gap-2">
+                <div className="absolute top-4 left-6 flex gap-2 flex-wrap">
                   <span className="px-3 py-1 bg-white/10 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded border border-white/20">
                     {post.category}
                   </span>
@@ -153,7 +153,7 @@ export default function BlogPage() {
                   )}
                 </div>
 
-                <h3 className="text-white text-xl font-bold leading-tight relative z-10 group-hover:text-gold transition-colors duration-300">
+                <h3 className="text-white text-lg font-bold leading-snug relative z-10 pt-10 group-hover:text-gold transition-colors duration-300">
                   {post.title}
                 </h3>
               </div>
