@@ -502,6 +502,19 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       {/* Used Sessions Control */}
                       <div className="text-right space-y-1">
                         <div className="flex items-center justify-end gap-2">
+                          <span className="text-2xl font-heading font-bold text-charcoal">
+                              {userPlan.usedSessions}
+                          </span>
+                          <span className="text-sm text-charcoal-lighter font-medium">/ {userPlan.totalSessions}</span>
+                        </div>
+                        <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest">Usadas</p>
+                      </div>
+                      
+                      <div className="w-px h-8 bg-blush-50" />
+                      
+                      {/* Remaining Sessions Control */}
+                      <div className="text-right">
+                        <div className="flex items-center justify-end gap-2">
                           {editingPlanId === userPlan.id ? (
                             <div className="flex items-center gap-1">
                               <input 
@@ -512,7 +525,12 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                                 autoFocus
                               />
                               <button 
-                                onClick={() => handleUpdateSessions(userPlan.id, parseInt(newSessionVal))}
+                                onClick={() => {
+                                  // El admin pone cuantas le QUEDAN. Calculamos las usadas.
+                                  const left = parseInt(newSessionVal);
+                                  const used = userPlan.totalSessions - left;
+                                  handleUpdateSessions(userPlan.id, used);
+                                }}
                                 className="p-1 text-emerald-500 hover:bg-emerald-50 rounded"
                               >
                                 <CheckCircle size={14} />
@@ -522,25 +540,14 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                             <button 
                               onClick={() => {
                                 setEditingPlanId(userPlan.id);
-                                setNewSessionVal(userPlan.usedSessions.toString());
+                                setNewSessionVal(userPlan.sessionsRemaining.toString());
                               }}
-                              className="text-2xl font-heading font-bold text-charcoal group-hover:text-blush-500 transition-colors"
+                              className="text-2xl font-heading font-bold text-charcoal leading-none group-hover:text-blush-500 transition-colors"
                             >
-                              {userPlan.usedSessions}
+                              {userPlan.sessionsRemaining}
                             </button>
                           )}
-                          <span className="text-sm text-charcoal-lighter font-medium">/ {userPlan.totalSessions}</span>
                         </div>
-                        <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest">Usadas</p>
-                      </div>
-                      
-                      <div className="w-px h-8 bg-blush-50" />
-                      
-                      {/* Remaining Sessions */}
-                      <div className="text-right">
-                        <p className="text-2xl font-heading font-bold text-charcoal leading-none">
-                          {userPlan.sessionsRemaining}
-                        </p>
                         <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest mt-1">Disp.</p>
                       </div>
 
