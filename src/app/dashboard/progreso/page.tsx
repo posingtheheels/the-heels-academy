@@ -90,8 +90,8 @@ export default function StudentProgressPage() {
                   </div>
 
                   {log.imageUrl && (
-                    <div className="mt-6 rounded-2xl overflow-hidden aspect-video shadow-sm border border-blush-50">
-                       <img src={log.imageUrl} alt={log.title} className="w-full h-full object-cover" />
+                    <div className="mt-6 rounded-2xl overflow-hidden bg-charcoal-light/5 shadow-sm border border-blush-50">
+                       <img src={log.imageUrl} alt={log.title} className="w-full h-auto max-h-[80vh] object-contain" />
                     </div>
                   )}
                 </div>

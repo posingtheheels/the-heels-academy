@@ -703,8 +703,8 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       {log.content}
                     </p>
                     {log.imageUrl && (
-                      <div className="rounded-xl overflow-hidden aspect-video border border-blush-50 max-w-sm">
-                        <img src={log.imageUrl} alt={log.title} className="w-full h-full object-cover" />
+                      <div className="mt-4 rounded-xl overflow-hidden bg-charcoal-light/5 border border-blush-50 max-w-md">
+                        <img src={log.imageUrl} alt={log.title} className="w-full h-auto max-h-[80vh] object-contain" />
                       </div>
                     )}
                   </div>
