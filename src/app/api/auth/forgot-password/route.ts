@@ -77,14 +77,15 @@ export async function POST(req: NextRequest) {
 
       if (error) {
         console.error("Resend delivery failed:", error);
-      } else {
-        console.log("Recovery email sent successfully");
+        return NextResponse.json({ error: "Resend Error", details: error.message }, { status: 500 });
       }
     } catch (emailErr: any) {
       console.error("Error in email sending process:", emailErr);
+      return NextResponse.json({ error: "Email Error", details: emailErr.message }, { status: 500 });
     }
 
     return NextResponse.json({ 
+      success: true,
       message: "Si el email está registrado, recibirás un enlace de recuperación pronto." 
     });
   } catch (error: any) {
