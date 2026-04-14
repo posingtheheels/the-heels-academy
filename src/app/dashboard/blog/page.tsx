@@ -12,9 +12,10 @@ export default function BlogPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState<"ALL" | "PUBLISHED" | "DRAFT">("ALL");
+  const [filter, setFilter] = useState<"ALL" | "PUBLISHED" | "DRAFT" | "SCHEDULED">("ALL");
 
   const isAdmin = (session?.user as any)?.role === "ADMIN";
+  const now = new Date();
 
   useEffect(() => {
     async function fetchPosts() {
@@ -87,7 +88,13 @@ export default function BlogPage() {
             onClick={() => setFilter("PUBLISHED")}
             className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${filter === "PUBLISHED" ? "bg-emerald-500 text-white shadow-lg" : "text-charcoal-lighter hover:bg-emerald-50"}`}
           >
-            Publicados ({posts.filter(p => p.published).length})
+            Publicados ({posts.filter(p => p.published && (!p.scheduledAt || new Date(p.scheduledAt) <= now)).length})
+          </button>
+          <button 
+            onClick={() => setFilter("SCHEDULED")}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${filter === "SCHEDULED" ? "bg-sky-500 text-white shadow-lg" : "text-charcoal-lighter hover:bg-sky-50"}`}
+          >
+            Programados ({posts.filter(p => p.published && p.scheduledAt && new Date(p.scheduledAt) > now).length})
           </button>
           <button 
             onClick={() => setFilter("DRAFT")}
@@ -111,7 +118,11 @@ export default function BlogPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts
             .filter(post => {
-              if (filter === "PUBLISHED") return post.published;
+              const isScheduled = post.published && post.scheduledAt && new Date(post.scheduledAt) > now;
+              const isPublished = post.published && !isScheduled;
+              
+              if (filter === "PUBLISHED") return isPublished;
+              if (filter === "SCHEDULED") return isScheduled;
               if (filter === "DRAFT") return !post.published;
               return true;
             })
@@ -135,6 +146,11 @@ export default function BlogPage() {
                       Borrador
                     </span>
                   )}
+                  {post.published && post.scheduledAt && new Date(post.scheduledAt) > now && (
+                    <span className="px-3 py-1 bg-sky-500/20 backdrop-blur-sm text-sky-300 text-[10px] font-bold uppercase tracking-[0.2em] rounded border border-sky-500/30">
+                      Programado
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="text-white text-xl font-bold leading-tight relative z-10 group-hover:text-gold transition-colors duration-300">
@@ -145,7 +161,7 @@ export default function BlogPage() {
               <div className="p-8 flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-6 text-charcoal-lighter text-[10px] uppercase tracking-widest font-medium">
                   <Calendar size={12} className="text-gold" />
-                  {new Date(post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+                  {new Date(post.scheduledAt || post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
                 </div>
 
                 <p className="text-charcoal-lighter text-sm leading-relaxed mb-8 line-clamp-3">
