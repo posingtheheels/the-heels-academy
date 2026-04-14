@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
 import AuthProvider from "@/components/providers/AuthProvider";
+import PWAInstallBanner from "@/components/pwa/PWAInstallBanner";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "The Heels | Posing Academy by Alejandra Sanchis",
   description:
     "Culturismo es el arte de esculpir tu cuerpo. Posing es el arte de mostrar tu trabajo. Academia de posing para culturismo con clases online y presenciales.",
+  manifest: "/manifest.json",
+  themeColor: "#e8839b",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "The Heels",
+  },
   keywords: [
     "posing",
     "culturismo",
@@ -23,6 +32,7 @@ export const metadata: Metadata = {
   },
 };
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,7 +44,10 @@ export default function RootLayout({
         <meta name="version" content="1.0.4-blog-pro" />
       </head>
       <body className="font-body">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <PWAInstallBanner />
+        </AuthProvider>
       </body>
     </html>
   );
