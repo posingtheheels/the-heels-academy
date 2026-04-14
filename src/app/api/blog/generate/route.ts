@@ -38,23 +38,37 @@ export async function GET(req: NextRequest) {
     const datesToGenerate = scheduledDates.slice(0, 8);
 
     const categories = ["POSING", "NUTRICION", "ENTRENAMIENTO", "PSICOLOGIA", "REGLAMENTO", "MASTERCLASS"];
+    const subTopics = [
+      "un error muy poco común pero devastador",
+      "el secreto mejor guardado de las top Olympias",
+      "cómo romper el estancamiento a nivel avanzado",
+      "la perspectiva estricta de los jueces centrales",
+      "el impacto invisible del estrés crónico",
+      "una técnica muy avanzada y poco conocida",
+      "errores típicos de las amateurs intentando ser Pro",
+      "desmitificando un dogma tóxico del fitness convencional",
+      "ajustes milimétricos que cambian todo tu físico en tarima",
+      "las claves científicas para maximizar los resultados"
+    ];
 
     const generatedPosts = [];
 
     for (let i = 0; i < datesToGenerate.length; i++) {
       const date = datesToGenerate[i];
       const category = categories[i % categories.length];
+      const angle = subTopics[i % subTopics.length];
       
       const prompt = `Eres la redactora jefa de "The Heels Academy", una academia de posing y preparación de élite para atletas Bikini y Wellness de la NPC e IFBB Pro League. 
-      Escribe un artículo técnico de blog PROFESIONAL y con autoridad.
+      Escribe un artículo técnico de blog PROFESIONAL y con autoridad. NO repitas introducciones genéricas. Sé creativa y sumamente específica.
       
       REQUSITOS CRÍTICOS:
-      - TEMA: Relacionado con ${category} en el contexto del culturismo femenino de alta competición.
+      - TEMA: ${category} en el contexto del culturismo femenino de competición.
+      - ÁNGULO ESPECÍFICO: El artículo debe girar en torno a ${angle}.
       - EXTENSIÓN: Mínimo 800 palabras. Debe ser profundo y detallado.
       - FORMATO: Usa Markdown (## para secciones, ### para subsecciones, > para citas, **negritas** para conceptos clave, listas con puntos).
       - ESTRUCTURA: 
-         1. Introducción potente inspiradora.
-         2. 3-4 secciones técnicas con consejos aplicables.
+         1. Introducción extremadamente directa y técnica (evita frases como "en el culturismo femenino los detalles no son complementos").
+         2. 3-4 secciones técnicas muy avanzadas.
          3. Una sección de "Debate" o "Pregunta para la alumna".
          4. Conclusión motivadora.
       - IDIOMA: Español de España (Castellano), tono elegante, empoderador y técnico.
@@ -69,7 +83,12 @@ export async function GET(req: NextRequest) {
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
-        messages: [{ role: "system", content: "Expert Bodybuilding Journalist for The Heels Academy." }, { role: "user", content: prompt }],
+        temperature: 0.9,
+        presence_penalty: 0.5,
+        messages: [
+          { role: "system", content: "Expert Bodybuilding Journalist. Nunca repitas la misma frase introductoria en múltiples artículos. Usa ángulos literarios distintos en cada respuesta." },
+          { role: "user", content: prompt }
+        ],
         response_format: { type: "json_object" }
       });
 
