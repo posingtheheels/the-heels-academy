@@ -54,15 +54,15 @@ export default function Hero() {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-8 inset-x-0 flex justify-center pointer-events-none">
         <a
           href="#objetivos"
-          className="flex flex-col items-center gap-2 text-charcoal-lighter hover:text-blush-500 transition-colors"
+          className="flex flex-col items-center gap-2 text-charcoal-lighter hover:text-blush-500 transition-colors pointer-events-auto animate-bounce"
         >
-          <span className="text-[10px] tracking-[0.2em] uppercase font-body">
+          <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-center">
             Descubre más
           </span>
-          <ArrowDown size={16} />
+          <ArrowDown size={14} className="opacity-60" />
         </a>
       </div>
     </section>
