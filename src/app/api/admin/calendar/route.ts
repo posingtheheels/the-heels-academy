@@ -13,9 +13,17 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const month = parseInt(searchParams.get("month") || "");
     const year = parseInt(searchParams.get("year") || "");
+    const startStr = searchParams.get("start");
+    const endStr = searchParams.get("end");
 
-    const startDate = !isNaN(month) && !isNaN(year) ? new Date(year, month - 1, 1) : undefined;
-    const endDate = !isNaN(month) && !isNaN(year) ? new Date(year, month, 0, 23, 59, 59) : undefined;
+    let startDate, endDate;
+    if (startStr && endStr) {
+      startDate = new Date(startStr);
+      endDate = new Date(endStr);
+    } else if (!isNaN(month) && !isNaN(year)) {
+      startDate = new Date(year, month - 1, 1);
+      endDate = new Date(year, month, 0, 23, 59, 59);
+    }
 
     const where: any = {};
     if (startDate && endDate) {

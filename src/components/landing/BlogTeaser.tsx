@@ -38,7 +38,7 @@ export default function BlogTeaser() {
             <BookOpen size={16} />
             <span>REVISTA TÉCNICA EXCLUSIVA</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-heading text-white mb-6">
             Aprende como una <span className="italic">PRO</span>
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">

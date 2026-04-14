@@ -49,9 +49,10 @@ export default function AdminAgendaPage() {
       if (!res.ok) throw new Error("Error fetching agenda");
       const data = await res.json();
       
-      // Filter for CONFIRMADA, REALIZADA or PENDIENTE_PAGO and in the week range
-      const confirmedSlots = data.filter((s: any) => 
-        s.bookings.some((b: any) => b.status === "CONFIRMADA" || b.status === "REALIZADA" || b.status === "PENDIENTE_PAGO")
+      // Filter for all reserved bookings
+      const slotsArray = Array.isArray(data) ? data : (data.slots || []);
+      const confirmedSlots = slotsArray.filter((s: any) => 
+        s.bookings && s.bookings.some((b: any) => b.status !== "CANCELADA")
       );
       
       setSlots(confirmedSlots);
@@ -85,7 +86,7 @@ export default function AdminAgendaPage() {
           <h1 className="font-heading text-3xl md:text-4xl text-charcoal font-light">Próximas <span className="font-medium">Clases</span></h1>
           <p className="text-sm text-charcoal-lighter mt-1 mb-6 flex items-center gap-2">
             <CheckCircle size={14} className="text-emerald-500" /> 
-            Solo sesiones confirmadas y pagadas
+            Todas las sesiones reservadas
           </p>
         </div>
         

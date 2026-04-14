@@ -30,6 +30,8 @@ const config: Config = {
           DEFAULT: "#2D2D2D",
           light: "#4A4A4A",
           lighter: "#6B6B6B",
+          darkest: "#1A1A1A",
+          black: "#0D0D0D",
         },
       },
       fontFamily: {

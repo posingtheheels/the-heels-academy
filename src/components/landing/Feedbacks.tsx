@@ -99,12 +99,12 @@ export default function Feedbacks() {
                         <>
                            <img 
                             src={fb.imageUrl} 
-                            alt="" 
+                            alt={`Imagen de fondo de ${fb.name || "alumna"}`} 
                             className="absolute inset-0 w-full h-full object-cover opacity-5 blur-xl pointer-events-none shadow-inner"
                           />
                            <img 
                             src={fb.imageUrl} 
-                            alt={fb.name} 
+                            alt={`Imagen del testimonio de ${fb.name || "alumna"}`} 
                             className="relative z-10 max-h-full max-w-full object-contain rounded-xl shadow-lg"
                           />
                         </>
