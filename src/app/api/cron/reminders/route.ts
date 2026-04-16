@@ -63,7 +63,7 @@ export async function GET() {
                 <p style="margin: 15px 0 5px 0; font-size: 18px; color: #333; font-weight: bold;">${classDate}</p>
                 <p style="margin: 0; font-size: 24px; color: #BA9D81; font-weight: bold;">${classTime}</p>
                 <div style="margin-top: 15px; font-size: 13px; color: #777;">
-                   Modo: <span style="color: #333; font-weight: bold;">${booking.modality === 'ONLINE' ? 'Virtual (Google Meet)' : 'Presencial (Apex Power Gym)'}</span>
+                   Modo: <span style="color: #333; font-weight: bold;">${booking.modality === 'ONLINE' ? 'Videollamada (WhatsApp)' : 'Presencial (Apex Power Gym)'}</span>
                 </div>
               </div>
 
