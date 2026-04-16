@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
       console.log(`Payment confirmed for user ${userId} and plan ${planId}`);
       
       const plan = await prisma.plan.findUnique({ where: { id: planId } });
-      if (plan) {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (plan && user) {
         // Add classes to the user
         await prisma.userPlan.create({
           data: {
@@ -45,6 +46,32 @@ export async function POST(req: NextRequest) {
             expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
           }
         });
+
+        try {
+          const { resend } = await import("@/lib/resend");
+          await resend.emails.send({
+            from: "The Heels Academy <notificaciones@posingtheheels.com>",
+            to: "posingtheheels@gmail.com",
+            subject: `💰 Nueva compra de bono: ${user.name}`,
+            html: `
+              <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #eee; border-radius: 10px;">
+                <h1 style="color: #ed8796; text-align: center;">¡Nueva venta de Bono!</h1>
+                <p><strong>${user.name}</strong> (${user.email}) acaba de comprar el siguiente bono a través de la web:</p>
+                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                  <p style="margin:0;"><strong>Plan adquirido:</strong> ${plan.name}</p>
+                  <p style="margin:5px 0 0 0;"><strong>Sesiones añadidas a su saldo:</strong> ${plan.totalSessions}</p>
+                </div>
+                <p>La alumna ya puede entrar a la app y empezar a canjear sus sesiones en el calendario.</p>
+                <p style="text-align: center; margin-top:30px;">
+                  <a href="https://posingtheheels.com/admin/alumnos" style="background-color: #ed8796; color: white; padding: 12px 25px; border-radius: 20px; font-weight:bold; text-decoration: none;">Ver saldo de alumnas</a>
+                </p>
+              </div>
+            `,
+          });
+        } catch (e) {
+          console.error("Error enviando email webhook webhook Stripe", e);
+        }
+
         console.log(`Plan ${planId} activated for user ${userId}`);
       }
     }
