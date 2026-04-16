@@ -64,7 +64,7 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 días
+    maxAge: 365 * 10 * 24 * 60 * 60, // Permanente (10 años)
     updateAge: 24 * 60 * 60,   // Refrescar cada 24 horas si se usa la app
   },
   cookies: {
@@ -75,7 +75,7 @@ export const authOptions: AuthOptions = {
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === "production",
-        maxAge: 30 * 24 * 60 * 60, // 30 días de persistencia real del archivo de cookie
+        maxAge: 365 * 10 * 24 * 60 * 60, // Permanente (10 años) de persistencia en cookie
       },
     },
   },

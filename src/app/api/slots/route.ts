@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const isAdmin = session && (session.user as any)?.role === "ADMIN";
     
-    const where: any = {};
+    const where: any = {
+      dateTime: { gte: now }
+    };
     if (availableOnly) {
       where.available = true;
       // If not admin, must be at least 24h in advance

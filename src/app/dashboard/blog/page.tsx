@@ -121,6 +121,8 @@ export default function BlogPage() {
               const isScheduled = post.published && post.scheduledAt && new Date(post.scheduledAt) > now;
               const isPublished = post.published && !isScheduled;
               
+              if (!isAdmin) return isPublished;
+
               if (filter === "PUBLISHED") return isPublished;
               if (filter === "SCHEDULED") return isScheduled;
               if (filter === "DRAFT") return !post.published;
