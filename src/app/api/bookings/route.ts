@@ -208,6 +208,33 @@ export async function POST(req: NextRequest) {
               </div>
             `,
           }),
+          resend.emails.send({
+            from: "The Heels Academy <soporte@posingtheheels.com>",
+            to: session.user.email,
+            subject: `✅ Reserva Confirmada: Clase de Posing`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #f0f0f0; border-radius: 16px; color: #333;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                  <h1 style="color: #BA9D81; font-style: italic; margin: 0;">The Heels</h1>
+                  <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 10px; color: #999; margin-top: 5px;">Posing Academy</p>
+                </div>
+                <h2 style="color: #333; text-align: center; font-size: 20px;">¡Reserva guardada con éxito, ${session.user.name}!</h2>
+                <p style="text-align: center; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+                  Tu clase ha quedado apuntada en nuestra agenda correctamente. ¡Nos vemos súper pronto en la plataforma o en el gimnasio!
+                </p>
+                <div style="background: #fdf2f4; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center; border: 1px solid #ffccd5;">
+                  <p style="margin: 0; font-size: 14px; text-transform: uppercase; color: #BA9D81; font-weight: bold;">Tu cita</p>
+                  <p style="margin: 15px 0 5px 0; font-size: 18px; color: #333; font-weight: bold;">${formattedDate}</p>
+                  <div style="margin-top: 15px; font-size: 13px; color: #777;">
+                     Modo: <span style="color: #333; font-weight: bold;">${booking.modality === 'ONLINE' ? 'Virtual (Google Meet)' : 'Presencial (Apex Power Gym)'}</span>
+                  </div>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="https://posingtheheels.com/dashboard" style="background-color: #BA9D81; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Acceder a mi App</a>
+                </div>
+              </div>
+            `,
+          }),
           syncBookingToGoogleCalendar(booking.id)
         ]);
       } catch (emailError) {
