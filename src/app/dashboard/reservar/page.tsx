@@ -249,10 +249,15 @@ export default function BookingPage() {
 
         {/* Slots Content */}
         <div className="space-y-4">
-          <h3 className="font-heading text-xl text-charcoal mb-4 flex items-center gap-2">
-            <Clock size={18} className="text-blush-300" />
-            Horarios {selectedDate && `para el día ${selectedDate}`}
-          </h3>
+          <div className="flex flex-col mb-4 bg-blush-50/50 p-4 rounded-xl border border-blush-100">
+            <h3 className="font-heading text-xl text-charcoal flex items-center gap-2">
+              <Clock size={18} className="text-blush-400" />
+              Horarios {selectedDate && `para el día ${selectedDate}`}
+            </h3>
+            <p className="text-[11px] text-charcoal-lighter tracking-wider mt-1 flex items-center gap-1.5 uppercase font-medium">
+              🌍 Adaptados a tu zona horaria local ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+            </p>
+          </div>
           
           {loading ? (
              <div className="card text-center py-12">
