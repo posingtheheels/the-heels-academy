@@ -503,23 +503,25 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       <div className="text-right space-y-1">
                         <div className="flex items-center justify-end gap-2">
                           {editingPlanId === `used-${userPlan.id}` ? (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <input 
                                 type="number" 
-                                className="w-12 text-center text-sm font-bold border-b border-blush-300 focus:outline-none"
+                                className="w-12 text-center text-sm font-bold border-b-2 border-emerald-500 focus:outline-none bg-emerald-50/50 rounded-t-lg"
                                 value={newSessionVal}
                                 onChange={(e) => setNewSessionVal(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleUpdateSessions(userPlan.id, parseInt(newSessionVal));
+                                  }
+                                  if (e.key === 'Escape') setEditingPlanId(null);
+                                }}
                                 autoFocus
                               />
                               <button 
-                                onClick={() => {
-                                  // El admin pone cuantas USADAS tiene
-                                  const used = parseInt(newSessionVal);
-                                  handleUpdateSessions(userPlan.id, used);
-                                }}
-                                className="p-1 text-emerald-500 hover:bg-emerald-50 rounded"
+                                onClick={() => handleUpdateSessions(userPlan.id, parseInt(newSessionVal))}
+                                className="px-2 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-lg hover:bg-emerald-600 shadow-sm transition-all"
                               >
-                                <CheckCircle size={14} />
+                                GUARDAR
                               </button>
                             </div>
                           ) : (
@@ -550,24 +552,31 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       <div className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           {editingPlanId === `rem-${userPlan.id}` ? (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <input 
                                 type="number" 
-                                className="w-12 text-center text-sm font-bold border-b border-blush-300 focus:outline-none"
+                                className="w-12 text-center text-sm font-bold border-b-2 border-emerald-500 focus:outline-none bg-emerald-50/50 rounded-t-lg"
                                 value={newSessionVal}
                                 onChange={(e) => setNewSessionVal(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const left = parseInt(newSessionVal);
+                                    const used = userPlan.totalSessions - left;
+                                    handleUpdateSessions(userPlan.id, used);
+                                  }
+                                  if (e.key === 'Escape') setEditingPlanId(null);
+                                }}
                                 autoFocus
                               />
                               <button 
                                 onClick={() => {
-                                  // El admin pone cuantas le QUEDAN. Calculamos las usadas.
                                   const left = parseInt(newSessionVal);
                                   const used = userPlan.totalSessions - left;
                                   handleUpdateSessions(userPlan.id, used);
                                 }}
-                                className="p-1 text-emerald-500 hover:bg-emerald-50 rounded"
+                                className="px-2 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-lg hover:bg-emerald-600 shadow-sm transition-all"
                               >
-                                <CheckCircle size={14} />
+                                GUARDAR
                               </button>
                             </div>
                           ) : (
