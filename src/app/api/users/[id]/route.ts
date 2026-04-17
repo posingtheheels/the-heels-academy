@@ -42,7 +42,7 @@ export async function GET(
 
     return NextResponse.json(userWithoutPassword);
   } catch (error) {
-    console.error("Error fetching user details:", error);
+    console.error("Error fetching user details in /api/users/[id]:", error);
     return NextResponse.json(
       { error: "Error interno" },
       { status: 500 }
