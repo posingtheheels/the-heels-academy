@@ -92,8 +92,9 @@ export async function syncBookingToGoogleCalendar(bookingId: string) {
         console.log('Google Calendar event created');
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error syncing to Google Calendar:', error);
+    throw new Error(`Google Calendar Sync Failed: ${error.message}`);
   }
 }
 
@@ -128,7 +129,8 @@ export async function deleteGoogleCalendarEvent(bookingId: string) {
     });
     
     console.log('Google Calendar event deleted');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting from Google Calendar:', error);
+    throw new Error(`Google Calendar Delete Failed: ${error.message}`);
   }
 }
