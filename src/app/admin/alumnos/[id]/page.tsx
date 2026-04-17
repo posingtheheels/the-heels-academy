@@ -6,7 +6,7 @@ import {
   ArrowLeft, Mail, Phone, Calendar, Clock, 
   CreditCard, CheckCircle, AlertCircle, TrendingUp,
   Package, ChevronRight, MessageCircle, Trash2,
-  UserPlus, Plus, Trophy, Users, Key, Sparkles, Loader2, X, Image as ImageIcon
+  UserPlus, Plus, Trophy, Users, Key, Sparkles, Loader2, X, Image as ImageIcon, Edit2
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -542,9 +542,15 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                                 setEditingPlanId(userPlan.id);
                                 setNewSessionVal(userPlan.sessionsRemaining.toString());
                               }}
-                              className="text-2xl font-heading font-bold text-charcoal leading-none group-hover:text-blush-500 transition-colors"
+                              className="group flex flex-col items-center justify-center text-charcoal hover:text-blush-500 transition-colors bg-blush-50/20 hover:bg-blush-50 py-1.5 px-3 rounded-xl border border-transparent hover:border-blush-100"
+                              title="Modificar sesiones disponibles"
                             >
-                              {userPlan.sessionsRemaining}
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-2xl font-heading font-bold leading-none">
+                                  {userPlan.sessionsRemaining}
+                                </span>
+                                <Edit2 size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                              </div>
                             </button>
                           )}
                         </div>
