@@ -275,7 +275,7 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
 
   async function fetchAlumna() {
     try {
-      const res = await fetch(`/api/users/${params.id}`);
+      const res = await fetch(`/api/users/${params.id}`, { cache: 'no-store' });
       if (!res.ok) throw new Error("Error fetching alumna details");
       const data = await res.json();
       setAlumna(data);
