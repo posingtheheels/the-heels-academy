@@ -6,7 +6,7 @@ import {
   ArrowLeft, Mail, Phone, Calendar, Clock, 
   CreditCard, CheckCircle, AlertCircle, TrendingUp,
   Package, ChevronRight, MessageCircle, Trash2,
-  UserPlus, Plus, Trophy, Users, Key, Sparkles, Loader2, X, Image as ImageIcon, Edit2
+  UserPlus, Plus, Trophy, Users, Key, Sparkles, Loader2, X, Image as ImageIcon, Edit2, RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -241,6 +241,28 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
       await fetchAlumna();
     } catch (err: any) {
       alert(err.message);
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  async function handleSyncToGoogle(bookingId: string) {
+    setProcessingId(`sync-${bookingId}`);
+    try {
+      const res = await fetch("/api/admin/calendar/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al sincronizar");
+      
+      alert("✅ Sincronizado con Google Calendar con éxito");
+      fetchAlumna();
+    } catch (err: any) {
+      console.error(err);
+      alert("❌ Error: " + err.message);
     } finally {
       setProcessingId(null);
     }
@@ -677,7 +699,17 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                              </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                          {booking.status !== "CANCELADA" && (
+                            <button 
+                              onClick={() => handleSyncToGoogle(booking.id)}
+                              disabled={processingId === `sync-${booking.id}`}
+                              className="p-2 rounded-xl bg-sky-50 text-sky-500 hover:bg-sky-100 transition-all border border-sky-100"
+                              title="Sincronizar con Google Calendar"
+                            >
+                              <RefreshCw size={14} className={processingId === `sync-${booking.id}` ? "animate-spin" : ""} />
+                            </button>
+                          )}
                           {booking.status !== "CANCELADA" && booking.status !== "REALIZADA" && (
                             <button 
                               onClick={() => handleCancelBooking(booking.id)}
