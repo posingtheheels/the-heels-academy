@@ -502,12 +502,46 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       {/* Used Sessions Control */}
                       <div className="text-right space-y-1">
                         <div className="flex items-center justify-end gap-2">
-                          <span className="text-2xl font-heading font-bold text-charcoal">
-                              {userPlan.usedSessions}
-                          </span>
+                          {editingPlanId === `used-${userPlan.id}` ? (
+                            <div className="flex items-center gap-1">
+                              <input 
+                                type="number" 
+                                className="w-12 text-center text-sm font-bold border-b border-blush-300 focus:outline-none"
+                                value={newSessionVal}
+                                onChange={(e) => setNewSessionVal(e.target.value)}
+                                autoFocus
+                              />
+                              <button 
+                                onClick={() => {
+                                  // El admin pone cuantas USADAS tiene
+                                  const used = parseInt(newSessionVal);
+                                  handleUpdateSessions(userPlan.id, used);
+                                }}
+                                className="p-1 text-emerald-500 hover:bg-emerald-50 rounded"
+                              >
+                                <CheckCircle size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => {
+                                setEditingPlanId(`used-${userPlan.id}`);
+                                setNewSessionVal(userPlan.usedSessions.toString());
+                              }}
+                              className="group flex items-center justify-center text-charcoal hover:text-blush-500 transition-colors bg-blush-50/20 hover:bg-blush-50 py-1 px-2 rounded-xl border border-transparent hover:border-blush-100"
+                              title="Modificar sesiones usadas"
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-2xl font-heading font-bold leading-none">
+                                  {userPlan.usedSessions}
+                                </span>
+                                <Edit2 size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </button>
+                          )}
                           <span className="text-sm text-charcoal-lighter font-medium">/ {userPlan.totalSessions}</span>
                         </div>
-                        <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest">Usadas</p>
+                        <p className="text-[10px] text-charcoal-lighter uppercase tracking-widest text-center mt-1">Usadas</p>
                       </div>
                       
                       <div className="w-px h-8 bg-blush-50" />
@@ -515,7 +549,7 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                       {/* Remaining Sessions Control */}
                       <div className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {editingPlanId === userPlan.id ? (
+                          {editingPlanId === `rem-${userPlan.id}` ? (
                             <div className="flex items-center gap-1">
                               <input 
                                 type="number" 
@@ -539,7 +573,7 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                           ) : (
                             <button 
                               onClick={() => {
-                                setEditingPlanId(userPlan.id);
+                                setEditingPlanId(`rem-${userPlan.id}`);
                                 setNewSessionVal(userPlan.sessionsRemaining.toString());
                               }}
                               className="group flex flex-col items-center justify-center text-charcoal hover:text-blush-500 transition-colors bg-blush-50/20 hover:bg-blush-50 py-1.5 px-3 rounded-xl border border-transparent hover:border-blush-100"
