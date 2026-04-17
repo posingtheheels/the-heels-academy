@@ -183,7 +183,7 @@ export default function AdminAgendaPage() {
 
              <button 
                className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-3 bg-sky-500 border-sky-500 hover:bg-sky-600"
-               onClick={() => alert("Función próximamente: Requiere configurar Client Secret de Google Cloud Console.")}
+               onClick={() => window.location.href = "/api/admin/calendar/auth"}
              >
                <ExternalLink size={16} />
                Conectar con mi cuenta Google
