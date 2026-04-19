@@ -94,40 +94,41 @@ export default function AdminAgendaPage() {
   return (
     <div className="max-w-7xl mx-auto pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-heading text-3xl md:text-4xl text-charcoal font-light">Próximas <span className="font-medium">Clases</span></h1>
-          <p className="text-sm text-charcoal-lighter mt-1 mb-6 flex items-center gap-2">
-            <CheckCircle size={14} className="text-emerald-500" /> 
-            Todas las sesiones reservadas
+          <h1 className="font-heading text-2xl md:text-3xl text-charcoal font-light">Próximas <span className="font-medium">Clases</span></h1>
+          <p className="text-[10px] md:text-sm text-charcoal-lighter mt-1 mb-2 md:mb-6 flex items-center gap-2 uppercase tracking-widest">
+            <CheckCircle size={12} className="text-emerald-500" /> 
+            Sesiones reservadas
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <button 
             onClick={() => fetchAgendaData()}
-            className="p-3 rounded-2xl bg-white border border-blush-100 text-charcoal-lighter hover:text-blush-500 hover:border-blush-200 transition-all shadow-sm flex items-center gap-2 text-xs font-bold"
+            className="p-2.5 rounded-xl bg-white border border-blush-100 text-charcoal-lighter hover:text-blush-500 hover:border-blush-200 transition-all shadow-sm flex items-center gap-2 text-[10px] font-bold"
             title="Refrescar datos"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
             REFRESCAR
           </button>
           <button 
             onClick={() => setShowSyncModal(true)}
-            className="btn-secondary flex items-center gap-2 text-xs font-bold py-3"
+            className="p-2.5 rounded-xl bg-charcoal text-white text-[10px] font-bold flex items-center gap-2 hover:bg-charcoal/90 transition-all"
           >
-            <Share2 size={14} />
-            Sincronizar Google Calendar
+            <Share2 size={12} />
+            GOOGLE CALENDAR
           </button>
-          <div className="flex items-center bg-white rounded-2xl border border-blush-50 p-1 shadow-sm">
-             <button onClick={() => changeWeek(-1)} className="p-2 hover:bg-blush-50 rounded-xl transition-all">
-                <ChevronLeft size={18} />
+          
+          <div className="flex items-center bg-white rounded-xl border border-blush-50 p-0.5 shadow-sm">
+             <button onClick={() => changeWeek(-1)} className="p-1.5 hover:bg-blush-50 rounded-lg transition-all">
+                <ChevronLeft size={16} />
              </button>
-             <div className="px-4 text-xs font-bold text-charcoal uppercase tracking-widest min-w-[180px] text-center">
+             <div className="px-2 text-[10px] font-bold text-charcoal uppercase tracking-tighter min-w-[120px] text-center">
                 Semana {weekDates[0].getDate()} - {weekDates[6].getDate()} {weekDates[6].toLocaleDateString('es-ES', { month: 'short' })}
              </div>
-             <button onClick={() => changeWeek(1)} className="p-2 hover:bg-blush-50 rounded-xl transition-all">
-                <ChevronRight size={18} />
+             <button onClick={() => changeWeek(1)} className="p-1.5 hover:bg-blush-50 rounded-lg transition-all">
+                <ChevronRight size={16} />
              </button>
           </div>
         </div>
@@ -140,23 +141,28 @@ export default function AdminAgendaPage() {
            ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 items-start">
+        <div className="flex flex-col lg:grid lg:grid-cols-7 gap-2 lg:gap-4 items-start">
           {weekDates.map((date, idx) => {
             const daySlots = getDaySlots(date);
             const isToday = new Date().toDateString() === date.toDateString();
 
             return (
-              <div key={idx} className={`flex flex-col gap-4 min-h-[500px] ${idx > 4 ? 'hidden lg:flex' : ''}`}>
-                 <div className={`px-4 py-3 rounded-2xl text-center border transition-all ${
+              <div key={idx} className={`w-full flex flex-col gap-2 lg:gap-4 lg:min-h-[400px] ${idx > 4 && daySlots.length === 0 ? 'hidden lg:flex' : ''}`}>
+                 <div className={`px-4 py-2 lg:py-3 rounded-xl lg:rounded-2xl text-left lg:text-center border transition-all flex lg:flex-col items-center lg:justify-center gap-3 lg:gap-0 ${
                    isToday ? "bg-charcoal text-white border-charcoal shadow-elegant" : "bg-white text-charcoal-light border-blush-50"
                  }`}>
-                    <p className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-60">
+                    <p className="text-[9px] lg:text-[10px] uppercase font-bold tracking-[0.2em] opacity-60 w-10 lg:w-auto">
                       {date.toLocaleDateString('es-ES', { weekday: 'short' })}
                     </p>
-                    <p className="text-lg font-heading font-bold">{date.getDate()}</p>
+                    <p className="text-sm lg:text-lg font-heading font-bold">{date.getDate()}</p>
+                    {daySlots.length > 0 && (
+                      <span className="lg:hidden ml-auto text-[8px] font-bold bg-blush-500 text-white px-2 py-0.5 rounded-full">
+                        {daySlots.length} CLASE{daySlots.length > 1 ? 'S' : ''}
+                      </span>
+                    )}
                  </div>
 
-                 <div className="space-y-3">
+                 <div className="space-y-2 lg:space-y-3 pl-4 lg:pl-0 border-l-2 lg:border-l-0 border-blush-50/50 lg:border-transparent ml-5 lg:ml-0">
                     {daySlots.length === 0 ? (
                       <div className="py-12 border-2 border-dashed border-blush-50 rounded-2xl flex flex-col items-center justify-center text-center px-4">
                          <div className="w-8 h-8 rounded-full bg-blush-50/50 flex items-center justify-center text-blush-200 mb-2">
@@ -225,7 +231,7 @@ function AgendaCard({ slot }: { slot: any }) {
   const isOnline = booking.modality === "ONLINE";
 
   return (
-    <div className={`card-flat bg-white border border-blush-50 p-4 shadow-sm hover:shadow-md transition-all overflow-hidden relative group ${
+    <div className={`card-flat bg-white border border-blush-50 p-2 lg:p-4 shadow-sm hover:shadow-md transition-all overflow-hidden relative group ${
       booking.status === "REALIZADA" ? "opacity-60" : ""
     }`}>
       {booking.status === "REALIZADA" && (
