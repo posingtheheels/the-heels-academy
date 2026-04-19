@@ -60,6 +60,8 @@ export async function GET(req: NextRequest) {
       include: { user: { select: { name: true } } },
     });
     
+    const googleCalendarEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN);
+    
     return NextResponse.json({
       userCount,
       reservationsToday: reservationsTodayList.length,
@@ -68,6 +70,7 @@ export async function GET(req: NextRequest) {
       pendingPayments: pendingBookingsList.length,
       pendingBookings: pendingBookingsList,
       recentActivity,
+      googleCalendarEnabled,
     });
   } catch (error) {
     console.error("Error fetching admin stats:", error);

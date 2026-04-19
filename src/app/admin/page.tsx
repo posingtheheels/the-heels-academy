@@ -10,6 +10,7 @@ export default function AdminPage() {
     monthlyRevenue: 0,
     pendingPayments: 0,
     recentActivity: [] as any[],
+    googleCalendarEnabled: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -202,9 +203,9 @@ export default function AdminPage() {
                </div>
                <div className="flex justify-between items-center text-xs">
                   <span className="text-white/60">Google Calendar</span>
-                  <span className="flex items-center gap-1.5 text-amber-300">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                    Pending config
+                  <span className={`flex items-center gap-1.5 ${stats.googleCalendarEnabled ? 'text-emerald-400' : 'text-amber-300'}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${stats.googleCalendarEnabled ? 'bg-emerald-400' : 'bg-amber-300'}`} />
+                    {stats.googleCalendarEnabled ? 'Active' : 'Pending config'}
                   </span>
                </div>
             </div>
