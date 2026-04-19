@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { 
   ChevronLeft, ChevronRight, Clock, User, 
   MapPin, Globe, CheckCircle, AlertCircle, Calendar as CalendarIcon,
-  Search, X, List, Share2, MoreVertical, ExternalLink
+  Search, X, List, Share2, MoreVertical, ExternalLink, RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 
@@ -39,30 +39,39 @@ export default function AdminAgendaPage() {
   async function fetchAgendaData() {
     setLoading(true);
     try {
-      const start = weekDates[0].toISOString();
-      const end = new Date(weekDates[6]);
+      // Set start to Monday 00:00:00 local
+      const start = new Date(currentWeekStart);
+      start.setHours(0, 0, 0, 0);
+      
+      // Set end to Sunday 23:59:59 local
+      const end = new Date(currentWeekStart);
+      end.setDate(currentWeekStart.getDate() + 6);
       end.setHours(23, 59, 59, 999);
+      
+      const startStr = start.toISOString();
       const endStr = end.toISOString();
 
-      // We fetch all slots and filter locally for simplicity or refine API later
-      const res = await fetch(`/api/admin/calendar?start=${start}&end=${endStr}`, {
+      console.log(`[Agenda] Fetching from ${startStr} to ${endStr}`);
+
+      const res = await fetch(`/api/admin/calendar?start=${startStr}&end=${endStr}`, {
         cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       });
+      
       if (!res.ok) throw new Error("Error fetching agenda");
       const data = await res.json();
       
-      // Filter for all reserved bookings
       const slotsArray = Array.isArray(data) ? data : (data.slots || []);
+      console.log(`[Agenda] Received ${slotsArray.length} total slots`);
+      
       const confirmedSlots = slotsArray.filter((s: any) => 
         s.bookings && s.bookings.some((b: any) => b.status !== "CANCELADA")
       );
       
+      console.log(`[Agenda] ${confirmedSlots.length} confirmed slots`);
       setSlots(confirmedSlots);
     } catch (err) {
-      console.error(err);
+      console.error("[Agenda] Error:", err);
     } finally {
       setLoading(false);
     }
@@ -77,9 +86,8 @@ export default function AdminAgendaPage() {
   const getDaySlots = (date: Date) => {
     return slots.filter((s: any) => {
       const d = new Date(s.dateTime);
-      return d.getDate() === date.getDate() && 
-             d.getMonth() === date.getMonth() && 
-             d.getFullYear() === date.getFullYear();
+      // Use local date comparison to avoid timezone shifts
+      return d.toLocaleDateString() === date.toLocaleDateString();
     }).sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
   };
 
@@ -96,6 +104,14 @@ export default function AdminAgendaPage() {
         </div>
         
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => fetchAgendaData()}
+            className="p-3 rounded-2xl bg-white border border-blush-100 text-charcoal-lighter hover:text-blush-500 hover:border-blush-200 transition-all shadow-sm flex items-center gap-2 text-xs font-bold"
+            title="Refrescar datos"
+          >
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            REFRESCAR
+          </button>
           <button 
             onClick={() => setShowSyncModal(true)}
             className="btn-secondary flex items-center gap-2 text-xs font-bold py-3"
