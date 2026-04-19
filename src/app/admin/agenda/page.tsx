@@ -45,7 +45,12 @@ export default function AdminAgendaPage() {
       const endStr = end.toISOString();
 
       // We fetch all slots and filter locally for simplicity or refine API later
-      const res = await fetch(`/api/admin/calendar?start=${start}&end=${endStr}`);
+      const res = await fetch(`/api/admin/calendar?start=${start}&end=${endStr}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       if (!res.ok) throw new Error("Error fetching agenda");
       const data = await res.json();
       
