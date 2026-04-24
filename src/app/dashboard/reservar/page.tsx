@@ -257,6 +257,9 @@ export default function BookingPage() {
             <p className="text-[11px] text-charcoal-lighter tracking-wider mt-1 flex items-center gap-1.5 uppercase font-medium">
               🌍 Adaptados a tu zona horaria local ({Intl.DateTimeFormat().resolvedOptions().timeZone})
             </p>
+            <p className="text-[11px] text-blush-500 tracking-wider mt-0.5 flex items-center gap-1.5 uppercase font-bold">
+              ⏰ Hora sede (España): {new Intl.DateTimeFormat("es-ES", { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }).format(new Date())}
+            </p>
           </div>
           
           {loading ? (
