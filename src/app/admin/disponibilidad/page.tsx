@@ -6,6 +6,7 @@ import { Plus, Clock, Trash2, Calendar, AlertCircle, CheckCircle, X, ChevronRigh
 export default function DisponibilidadPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [slots, setSlots] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -69,6 +70,8 @@ export default function DisponibilidadPage() {
     
     setError("");
     setSuccess("");
+    setDeletingId(id);
+    
     try {
       const res = await fetch(`/api/slots/${id}`, {
         method: "DELETE",
@@ -78,9 +81,18 @@ export default function DisponibilidadPage() {
       if (!res.ok) throw new Error(data.error || "Error al borrar");
       
       setSuccess("Horario borrado correctamente");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Update local state immediately for better UX
+      setSlots(prev => prev.filter(s => s.id !== id));
+      
+      // Refresh from server too
       fetchSlots();
     } catch (err: any) {
       setError(err.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -399,7 +411,8 @@ export default function DisponibilidadPage() {
                 </span>
                 <button 
                   onClick={() => handleDeleteSlot(slot.id)}
-                  className="p-2 text-red-300 hover:text-red-500 transition-colors"
+                  disabled={deletingId === slot.id}
+                  className={`p-2 transition-colors ${deletingId === slot.id ? "text-charcoal-lighter animate-pulse" : "text-red-300 hover:text-red-500"}`}
                 >
                   <Trash2 size={16} />
                 </button>

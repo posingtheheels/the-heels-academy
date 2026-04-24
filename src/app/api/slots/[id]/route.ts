@@ -34,8 +34,13 @@ export async function DELETE(
       }, { status: 400 });
     }
 
-    // Delete the slot (if there were cancelled/completed bookings, decide if delete them too or just the slot)
-    // Here we'll delete the slot and cascade delete associated bookings (cancelled/realizada)
+    // Delete all bookings associated with this slot (cancelled, etc.)
+    // Active ones are already checked above
+    await prisma.booking.deleteMany({
+      where: { slotId: slotId },
+    });
+
+    // Delete the slot 
     await prisma.slot.delete({
       where: { id: slotId },
     });
