@@ -84,7 +84,11 @@ export async function PATCH(
 
       // Perform cancellation in transaction
       const cancelledBooking = await prisma.$transaction(async (tx: any) => {
-        // ... (transaction code)
+        // Prevent double-counting if already cancelled
+        if (booking.status === "CANCELADA") {
+          return booking;
+        }
+
         const updated = await tx.booking.update({
           where: { id: params.id },
           data: { status: "CANCELADA" },
@@ -95,11 +99,18 @@ export async function PATCH(
           data: { available: true },
         });
 
+        // Only return session to plan if it was originally using one
         if (booking.userPlanId) {
-          await tx.userPlan.update({
-            where: { id: booking.userPlanId },
-            data: { usedSessions: { decrement: 1 } },
+          const userPlan = await tx.userPlan.findUnique({
+            where: { id: booking.userPlanId }
           });
+          
+          if (userPlan && userPlan.usedSessions > 0) {
+            await tx.userPlan.update({
+              where: { id: booking.userPlanId },
+              data: { usedSessions: { decrement: 1 } },
+            });
+          }
         }
 
         return updated;
@@ -142,27 +153,45 @@ export async function PATCH(
 
     // Other updates (admin only)
     if (isAdmin && status) {
-       const updated = await prisma.$transaction(async (tx: any) => {
-         const up = await tx.booking.update({
-           where: { id: params.id },
-           data: { status },
-         });
+        const updated = await prisma.$transaction(async (tx: any) => {
+          const up = await tx.booking.update({
+            where: { id: params.id },
+            data: { status },
+          });
 
-         if (status === "CANCELADA") {
-           await tx.slot.update({
-             where: { id: booking.slotId },
-             data: { available: true },
-           });
+          // Only adjust balance if status is actually CHANGING
+          if (status !== booking.status) {
+            if (status === "CANCELADA") {
+              await tx.slot.update({
+                where: { id: booking.slotId },
+                data: { available: true },
+              });
 
-           if (booking.userPlanId) {
-             await tx.userPlan.update({
-               where: { id: booking.userPlanId },
-               data: { usedSessions: { decrement: 1 } },
-             });
-           }
-         }
-         return up;
-       });
+              if (booking.userPlanId) {
+                const upLan = await tx.userPlan.findUnique({ where: { id: booking.userPlanId } });
+                if (upLan && upLan.usedSessions > 0) {
+                  await tx.userPlan.update({
+                    where: { id: booking.userPlanId },
+                    data: { usedSessions: { decrement: 1 } },
+                  });
+                }
+              }
+            } else if (booking.status === "CANCELADA" && (status === "CONFIRMADA" || status === "PENDIENTE_PAGO")) {
+              await tx.slot.update({
+                where: { id: booking.slotId },
+                data: { available: false },
+              });
+
+              if (booking.userPlanId) {
+                await tx.userPlan.update({
+                  where: { id: booking.userPlanId },
+                  data: { usedSessions: { increment: 1 } },
+                });
+              }
+            }
+          }
+          return up;
+        });
 
        // Background task: delete from Google Calendar if cancelled
        if (status === "CANCELADA") {
