@@ -40,6 +40,7 @@ export async function syncBookingToGoogleCalendar(bookingId: string) {
     const storedConfig = await prisma.adminTask.findUnique({
       where: { id: "google-calendar-config" }
     });
+    // If we have a DB token, it's likely fresher than the ENV one
     if (storedConfig?.description) {
       refreshToken = storedConfig.description;
     }
@@ -48,8 +49,7 @@ export async function syncBookingToGoogleCalendar(bookingId: string) {
   }
 
   if (!refreshToken) {
-    console.warn('Google Calendar refresh token not configured. Skipping sync.');
-    return;
+    throw new Error('No hay una cuenta de Google vinculada. Por favor, ve a Agenda > Google Calendar y conecta tu cuenta.');
   }
 
   try {
@@ -107,6 +107,9 @@ export async function syncBookingToGoogleCalendar(bookingId: string) {
     }
   } catch (error: any) {
     console.error('Error syncing to Google Calendar:', error);
+    if (error.message.includes('invalid_grant')) {
+      throw new Error('La conexión con Google ha caducado. Pulsa en el botón "Google Calendar" de tu Agenda para volver a vincular tu cuenta.');
+    }
     throw new Error(`Google Calendar Sync Failed: ${error.message}`);
   }
 }
