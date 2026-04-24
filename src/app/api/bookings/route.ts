@@ -178,13 +178,15 @@ export async function POST(req: NextRequest) {
         const { resend } = await import("@/lib/resend");
         const { syncBookingToGoogleCalendar } = await import("@/lib/google-calendar");
         
-        const formattedDate = new Date(booking.dateTime).toLocaleDateString("es-ES", {
+        const date = new Date(booking.dateTime);
+        const formattedDate = new Intl.DateTimeFormat("es-ES", {
           weekday: "long",
           day: "numeric",
           month: "long",
           hour: "2-digit",
           minute: "2-digit",
-        });
+          timeZone: "Europe/Madrid"
+        }).format(date);
 
         // Send Email and Sync Calendar in parallel
         await Promise.allSettled([
@@ -199,7 +201,7 @@ export async function POST(req: NextRequest) {
                 <p>Se ha nueva reserva en <strong>The Heels Academy</strong>:</p>
                 <div style="background-color: #fce7eb; padding: 25px; border-radius: 15px; margin: 30px 0;">
                   <p style="margin: 0 0 10px 0;"><strong>Alumna:</strong> ${session.user.name} (${session.user.email})</p>
-                  <p style="margin: 0 0 10px 0;"><strong>Fecha y Hora:</strong> ${formattedDate}</p>
+                  <p style="margin: 0 0 10px 0;"><strong>Fecha y Hora:</strong> ${formattedDate} (Hora España)</p>
                   <p style="margin: 0;"><strong>Modalidad:</strong> ${booking.modality}</p>
                 </div>
                 <p style="text-align: center; margin-top: 40px;">
@@ -225,6 +227,7 @@ export async function POST(req: NextRequest) {
                 <div style="background: #fdf2f4; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center; border: 1px solid #ffccd5;">
                   <p style="margin: 0; font-size: 14px; text-transform: uppercase; color: #BA9D81; font-weight: bold;">Tu cita</p>
                   <p style="margin: 15px 0 5px 0; font-size: 18px; color: #333; font-weight: bold;">${formattedDate}</p>
+                  <p style="margin: 0; font-size: 10px; color: #BA9D81; text-transform: uppercase;">Hora de España (Madrid)</p>
                   <div style="margin-top: 15px; font-size: 13px; color: #777;">
                      Modo: <span style="color: #333; font-weight: bold;">${booking.modality === 'ONLINE' ? 'Videollamada (WhatsApp)' : 'Presencial (Apex Power Gym)'}</span>
                   </div>

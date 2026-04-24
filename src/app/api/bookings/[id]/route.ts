@@ -106,7 +106,15 @@ export async function PATCH(
       });
 
       // Background task: delete from Google Calendar
-      const formattedDate = new Date(booking.dateTime).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+      const date = new Date(booking.dateTime);
+      const formattedDate = new Intl.DateTimeFormat("es-ES", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/Madrid"
+      }).format(date);
       
       import("@/lib/resend").then(({ resend }) => {
         Promise.allSettled([
@@ -114,13 +122,13 @@ export async function PATCH(
             from: "The Heels Academy <notificaciones@posingtheheels.com>",
             to: "posingtheheels@gmail.com",
             subject: `❌ Reserva Cancelada: ${booking.user?.name}`,
-            html: `<p><strong>${booking.user?.name}</strong> ha cancelado la reserva del <strong>${formattedDate}</strong>.</p><p>Ese hueco ahora vuelve a estar libre y disponible en el calendario.</p>`,
+            html: `<p><strong>${booking.user?.name}</strong> ha cancelado la reserva del <strong>${formattedDate} (Hora España)</strong>.</p><p>Ese hueco ahora vuelve a estar libre y disponible en el calendario.</p>`,
           }),
           resend.emails.send({
             from: "The Heels Academy <soporte@posingtheheels.com>",
             to: booking.user?.email || "",
             subject: `Tu reserva ha sido cancelada`,
-            html: `<p>Hola ${booking.user?.name}, confirmamos que tu clase del <strong>${formattedDate}</strong> ha sido cancelada con éxito.</p><p>Tu sesión ha sido devuelta a tu bono y puedes volver a agendar cuando quieras desde la web.</p>`,
+            html: `<p>Hola ${booking.user?.name}, confirmamos que tu clase del <strong>${formattedDate} (Hora MDT/España)</strong> ha sido cancelada con éxito.</p><p>Tu sesión ha sido devuelta a tu bono y puedes volver a agendar cuando quieras desde la web.</p>`,
           })
         ]);
       }).catch(console.error);
