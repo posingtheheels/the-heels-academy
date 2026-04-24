@@ -65,6 +65,23 @@ export default function DisponibilidadPage() {
     }
   }
 
+  async function handleUpdateType(id: string, newType: string) {
+    try {
+      const res = await fetch(`/api/slots/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: newType }),
+      });
+      
+      if (!res.ok) throw new Error("Error al actualizar la modalidad");
+      
+      setSlots(slots.map(s => s.id === id ? { ...s, type: newType } : s));
+    } catch (err: any) {
+      setError(err.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
   async function handleDeleteSlot(id: string) {
     if (!confirm("¿Seguro que quieres borrar este horario?")) return;
     
@@ -401,7 +418,15 @@ export default function DisponibilidadPage() {
                     <span className="w-1 h-1 rounded-full bg-charcoal-lighter/30" />
                     <span>{slot.durationMinutes} min</span>
                     <span className="w-1 h-1 rounded-full bg-charcoal-lighter/30" />
-                    <span className="badge-blush text-[10px]">{slot.type}</span>
+                    <select
+                      value={slot.type}
+                      onChange={(e) => handleUpdateType(slot.id, e.target.value)}
+                      className="bg-blush-50 border-none text-[10px] font-bold uppercase tracking-wider text-blush-500 rounded-full px-2 py-0.5 cursor-pointer hover:bg-blush-100 transition-colors focus:ring-1 focus:ring-blush-200 outline-none"
+                    >
+                      <option value="AMBAS">Ambas</option>
+                      <option value="ONLINE">Online</option>
+                      <option value="PRESENCIAL">Presencial</option>
+                    </select>
                   </div>
                 </div>
               </div>
