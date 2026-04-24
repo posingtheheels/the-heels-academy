@@ -33,7 +33,20 @@ export async function getTokensFromCode(code: string) {
  * Syncs a booking to Google Calendar
  */
 export async function syncBookingToGoogleCalendar(bookingId: string) {
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  // 1. Resolve Refresh Token (Priority: Database > Environment Variable)
+  let refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  
+  try {
+    const storedConfig = await prisma.adminTask.findUnique({
+      where: { id: "google-calendar-config" }
+    });
+    if (storedConfig?.description) {
+      refreshToken = storedConfig.description;
+    }
+  } catch (dbError) {
+    console.error('Error fetching Google token from DB, falling back to ENV:', dbError);
+  }
+
   if (!refreshToken) {
     console.warn('Google Calendar refresh token not configured. Skipping sync.');
     return;
@@ -102,7 +115,20 @@ export async function syncBookingToGoogleCalendar(bookingId: string) {
  * Deletes a Google Calendar event
  */
 export async function deleteGoogleCalendarEvent(bookingId: string) {
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  // 1. Resolve Refresh Token (Priority: Database > Environment Variable)
+  let refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  
+  try {
+    const storedConfig = await prisma.adminTask.findUnique({
+      where: { id: "google-calendar-config" }
+    });
+    if (storedConfig?.description) {
+      refreshToken = storedConfig.description;
+    }
+  } catch (dbError) {
+    console.error('Error fetching Google token from DB for deletion:', dbError);
+  }
+
   if (!refreshToken) return;
 
   try {
