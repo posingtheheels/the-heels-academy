@@ -76,20 +76,46 @@ export default function BookingPage() {
   const hasSlots = (day: number) => {
     return slots.some(slot => {
       const d = new Date(slot.dateTime);
-      return d.getDate() === day && 
-             d.getMonth() === currentMonth.getMonth() && 
-             d.getFullYear() === currentMonth.getFullYear();
+      // Get day/month/year in Spain timezone
+      const spainParts = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric'
+      }).formatToParts(d);
+      
+      const sDay = parseInt(spainParts.find(p => p.type === 'day')?.value || "0");
+      const sMonth = parseInt(spainParts.find(p => p.type === 'month')?.value || "0") - 1; // JS months 0-11
+      const sYear = parseInt(spainParts.find(p => p.type === 'year')?.value || "0");
+
+      return sDay === day && 
+             sMonth === currentMonth.getMonth() && 
+             sYear === currentMonth.getFullYear();
     });
   };
 
   const daySlots = selectedDate ? slots.filter(slot => {
     const d = new Date(slot.dateTime);
+    
+    // Get day/month/year in Spain timezone
+    const spainParts = new Intl.DateTimeFormat('es-ES', {
+      timeZone: 'Europe/Madrid',
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    }).formatToParts(d);
+    
+    const sDay = parseInt(spainParts.find(p => p.type === 'day')?.value || "0");
+    const sMonth = parseInt(spainParts.find(p => p.type === 'month')?.value || "0") - 1;
+    const sYear = parseInt(spainParts.find(p => p.type === 'year')?.value || "0");
+
     const now = new Date();
+    // 24h limit also should ideally be based on the actual UTC diff, but 24h is 24h regardless of timezone.
     const minDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     
-    return d.getDate() === selectedDate && 
-           d.getMonth() === currentMonth.getMonth() && 
-           d.getFullYear() === currentMonth.getFullYear() &&
+    return sDay === selectedDate && 
+           sMonth === currentMonth.getMonth() && 
+           sYear === currentMonth.getFullYear() &&
            d >= minDate;
   }) : [];
 
@@ -254,12 +280,6 @@ export default function BookingPage() {
               <Clock size={18} className="text-blush-400" />
               Horarios {selectedDate && `para el día ${selectedDate}`}
             </h3>
-            <p className="text-[11px] text-charcoal-lighter tracking-wider mt-1 flex items-center gap-1.5 uppercase font-medium">
-              🌍 Adaptados a tu zona horaria local ({Intl.DateTimeFormat().resolvedOptions().timeZone})
-            </p>
-            <p className="text-[11px] text-blush-500 tracking-wider mt-0.5 flex items-center gap-1.5 uppercase font-bold">
-              ⏰ Hora sede (España): {new Intl.DateTimeFormat("es-ES", { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }).format(new Date())}
-            </p>
           </div>
           
           {loading ? (
@@ -280,7 +300,11 @@ export default function BookingPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-2xl font-heading font-medium text-charcoal">
-                        {new Date(slot.dateTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(slot.dateTime).toLocaleTimeString('es-ES', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          timeZone: 'Europe/Madrid'
+                        })} <span className="text-[10px] font-normal opacity-50 uppercase">Hora España</span>
                       </p>
                       <p className="text-xs text-charcoal-lighter tracking-wide uppercase">
                         {slot.type === "AMBAS" 

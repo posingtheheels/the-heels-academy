@@ -126,7 +126,11 @@ function BookingCard({ booking }: { booking: any }) {
   const dayName = date.toLocaleDateString("es-ES", { weekday: "long" });
   const dayNum = date.getDate();
   const monthName = date.toLocaleDateString("es-ES", { month: "short" });
-  const hours = date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  const hours = date.toLocaleTimeString("es-ES", { 
+    hour: "2-digit", 
+    minute: "2-digit",
+    timeZone: "Europe/Madrid" 
+  });
 
   const isOnline = booking.modality === "ONLINE" || booking.slot.type === "ONLINE";
 
@@ -145,7 +149,7 @@ function BookingCard({ booking }: { booking: any }) {
           <div className="flex flex-wrap items-center gap-3">
              <div className="flex items-center gap-1.5 px-3 py-1 bg-blush-50 border border-blush-200 rounded-full text-[10px] font-bold text-charcoal uppercase tracking-wider">
                <Clock size={12} className="text-blush-500" />
-               {hours} — {booking.slot.durationMinutes} min
+               {hours} <span className="text-[8px] opacity-70">(Hora España)</span> — {booking.modality === "ONLINE" ? 30 : booking.slot.durationMinutes} min
              </div>
              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                isOnline ? "bg-sky-50 border-sky-100 text-sky-600" : "bg-emerald-50 border-emerald-100 text-emerald-600"

@@ -44,9 +44,15 @@ export default function AdminCalendarPage() {
   const slotsByDay = useMemo(() => {
     const map: Record<number, SlotWithBookings[]> = {};
     slots.forEach((slot) => {
-      const d = new Date(slot.dateTime).getDate();
-      if (!map[d]) map[d] = [];
-      map[d].push(slot);
+      // Get day in Spain timezone
+      const date = new Date(slot.dateTime);
+      const day = parseInt(new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        day: 'numeric'
+      }).format(date));
+
+      if (!map[day]) map[day] = [];
+      map[day].push(slot);
     });
     return map;
   }, [slots]);
@@ -54,9 +60,15 @@ export default function AdminCalendarPage() {
   const tasksByDay = useMemo(() => {
     const map: Record<number, any[]> = {};
     tasks.forEach((task) => {
-      const d = new Date(task.date).getDate();
-      if (!map[d]) map[d] = [];
-      map[d].push(task);
+      // Get day in Spain timezone
+      const date = new Date(task.date);
+      const day = parseInt(new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        day: 'numeric'
+      }).format(date));
+
+      if (!map[day]) map[day] = [];
+      map[day].push(task);
     });
     return map;
   }, [tasks]);
@@ -221,7 +233,11 @@ function SlotDetailCard({ slot }: { slot: any }) {
   const activeBooking = slot.bookings.find((b: any) => b.status !== "CANCELADA");
   const displayBooking = activeBooking || slot.bookings[0]; // For modality/name info
   const isActuallyLibre = !activeBooking;
-  const time = new Date(slot.dateTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const time = new Date(slot.dateTime).toLocaleTimeString('es-ES', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    timeZone: 'Europe/Madrid'
+  });
 
   return (
     <div className={`card-flat bg-white border-l-4 transition-all shadow-sm ${
@@ -232,7 +248,7 @@ function SlotDetailCard({ slot }: { slot: any }) {
     }`}>
       <div className="flex justify-between items-start mb-4">
          <div>
-          <p className="text-xl font-heading font-bold text-charcoal">{time}</p>
+          <p className="text-xl font-heading font-bold text-charcoal">{time} <span className="text-[10px] font-normal opacity-60">Hora España</span></p>
           <p className="text-[10px] uppercase font-bold text-charcoal-lighter tracking-widest">
             {displayBooking?.modality === "ONLINE" ? 30 : slot.durationMinutes} MIN • {slot.type}
           </p>

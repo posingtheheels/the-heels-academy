@@ -145,7 +145,11 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 <div className="text-right">
                   <span className="text-[10px] uppercase tracking-widest opacity-40">Horario</span>
                   <p className="text-lg font-semibold mt-1">
-                    {date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} — {booking.slot.durationMinutes} min
+                    {date.toLocaleTimeString('es-ES', { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      timeZone: 'Europe/Madrid'
+                    })} <span className="text-[10px] opacity-60">(Hora España)</span> — {booking.modality === "ONLINE" ? 30 : booking.slot.durationMinutes} min
                   </p>
                 </div>
              </div>

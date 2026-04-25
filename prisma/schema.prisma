@@ -187,3 +187,11 @@ model ProgressLog {
   @@index([userId])
   @@index([date])
 }
+
+model GlobalConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

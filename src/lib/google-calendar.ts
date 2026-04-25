@@ -69,6 +69,8 @@ export async function syncBookingToGoogleCalendar(bookingId: string) {
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     
+    const duration = booking.modality === 'ONLINE' ? 30 : booking.slot.durationMinutes;
+    
     const event = {
       summary: `👠 Posing: ${booking.user.name} (${booking.modality})`,
       description: `Sesión de Posing con ${booking.user.name}.\nEmail: ${booking.user.email}\nModalidad: ${booking.modality}`,
@@ -77,7 +79,7 @@ export async function syncBookingToGoogleCalendar(bookingId: string) {
         timeZone: 'Europe/Madrid',
       },
       end: {
-        dateTime: new Date(booking.dateTime.getTime() + (booking.slot.durationMinutes * 60000)).toISOString(),
+        dateTime: new Date(booking.dateTime.getTime() + (duration * 60000)).toISOString(),
         timeZone: 'Europe/Madrid',
       },
     };
