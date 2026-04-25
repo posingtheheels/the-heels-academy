@@ -280,6 +280,13 @@ export default function BookingPage() {
               <Clock size={18} className="text-blush-400" />
               Horarios {selectedDate && `para el día ${selectedDate}`}
             </h3>
+            <p className="text-[11px] text-blush-500 tracking-wider mt-1 flex items-center gap-1.5 uppercase font-bold">
+              ⏰ Hora en España (Madrid): {new Intl.DateTimeFormat("es-ES", { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                timeZone: 'Europe/Madrid' 
+              }).format(new Date())}
+            </p>
           </div>
           
           {loading ? (
