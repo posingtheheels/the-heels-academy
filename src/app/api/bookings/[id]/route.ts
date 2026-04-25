@@ -94,10 +94,21 @@ export async function PATCH(
           data: { status: "CANCELADA" },
         });
 
-        await tx.slot.update({
-          where: { id: booking.slotId },
-          data: { available: true },
+        // Only mark slot as available if NO OTHER active bookings exist
+        const activeBookingsCount = await tx.booking.count({
+          where: {
+            slotId: booking.slotId,
+            id: { not: params.id },
+            status: { in: ["CONFIRMADA", "PENDIENTE_PAGO", "REALIZADA"] }
+          }
         });
+
+        if (activeBookingsCount === 0) {
+          await tx.slot.update({
+            where: { id: booking.slotId },
+            data: { available: true },
+          });
+        }
 
         // Only return session to plan if it was originally using one
         if (booking.userPlanId) {
@@ -162,10 +173,21 @@ export async function PATCH(
           // Only adjust balance if status is actually CHANGING
           if (status !== booking.status) {
             if (status === "CANCELADA") {
-              await tx.slot.update({
-                where: { id: booking.slotId },
-                data: { available: true },
+              // Only mark slot as available if NO OTHER active bookings exist
+              const activeCount = await tx.booking.count({
+                where: {
+                  slotId: booking.slotId,
+                  id: { not: params.id },
+                  status: { in: ["CONFIRMADA", "PENDIENTE_PAGO", "REALIZADA"] }
+                }
               });
+
+              if (activeCount === 0) {
+                await tx.slot.update({
+                  where: { id: booking.slotId },
+                  data: { available: true },
+                });
+              }
 
               if (booking.userPlanId) {
                 const upLan = await tx.userPlan.findUnique({ where: { id: booking.userPlanId } });
