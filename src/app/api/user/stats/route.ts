@@ -37,13 +37,15 @@ export async function GET(req: NextRequest) {
       },
     });
     
-    // 3. Completed classes
-    const completedClasses = await prisma.booking.count({
-      where: {
-        userId,
-        status: "REALIZADA",
-      },
+    // 3. Total activity (sum of used sessions in plans + extra finished bookings without plan)
+    const allPlansForCount = await prisma.userPlan.findMany({
+      where: { userId },
     });
+    const totalUsedFromPlans = allPlansForCount.reduce((acc: number, p: any) => acc + p.usedSessions, 0);
+    const extraDoneBookings = await prisma.booking.count({
+      where: { userId, userPlanId: null, status: "REALIZADA" },
+    });
+    const completedClasses = totalUsedFromPlans + extraDoneBookings;
     
     // 4. All user plans for history
     const allUserPlans = await prisma.userPlan.findMany({

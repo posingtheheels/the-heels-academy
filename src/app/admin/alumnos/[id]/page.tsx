@@ -368,6 +368,11 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
   const completedBookings = alumna.bookings?.filter((b: any) => b.status === "REALIZADA") || [];
   const pendingBookings = alumna.bookings?.filter((b: any) => b.status === "CONFIRMADA" || b.status === "PENDING") || [];
 
+  // Calcular el total de sesiones usadas (de bonos + clases sueltas realizadas)
+  const totalUsedFromPlans = userPlans.reduce((acc: number, p: any) => acc + p.usedSessions, 0);
+  const extraDoneBookings = alumna.bookings?.filter((b: any) => !b.userPlanId && b.status === "REALIZADA").length || 0;
+  const totalActivityCount = totalUsedFromPlans + extraDoneBookings;
+
   return (
     <div className="max-w-5xl mx-auto pb-12">
       {/* Header / Navigation */}
@@ -458,7 +463,7 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-2xl font-heading font-bold">{completedBookings.length}</p>
+                <p className="text-2xl font-heading font-bold">{totalActivityCount}</p>
                 <p className="text-[10px] text-white/40 uppercase tracking-tighter">Clases hechas</p>
               </div>
               <div>

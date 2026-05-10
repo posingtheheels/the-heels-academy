@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+export const maxDuration = 60; // Configuración para Vercel (aumenta el timeout)
 import OpenAI from "openai";
 import { addMonths, startOfMonth, addDays, getDay, format, setDate } from "date-fns";
 
@@ -107,7 +108,7 @@ export async function GET(req: NextRequest) {
           excerpt: result.excerpt,
           content: result.content,
           category: result.category,
-          published: true,
+          published: false,
           scheduledAt: date
         }
       });
