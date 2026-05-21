@@ -22,6 +22,9 @@ export default function AdminPage() {
   async function handleMarkAsPaid(bookingId: string) {
     if (!confirm("¿Seguro que quieres marcar esta reserva como PAGADA?")) return;
     
+    const booking = stats.pendingBookings?.find((b: any) => b.id === bookingId);
+    const priceToAdd = (!booking?.userPlanId) ? (booking?.modality === "ONLINE" ? 20 : 35) : 0;
+    
     setUpdatingId(bookingId);
     try {
       const res = await fetch(`/api/bookings/${bookingId}`, {
@@ -32,13 +35,14 @@ export default function AdminPage() {
       
       if (!res.ok) throw new Error("Error al marcar como pagado");
       
-      // Update local state to remove from pending
+      // Update local state to remove from pending and increment monthly revenue instantly
       setStats(prev => {
         const filteredPending = (prev.pendingBookings || []).filter((b: any) => b.id !== bookingId);
         return {
           ...prev,
           pendingPayments: filteredPending.length,
           pendingBookings: filteredPending,
+          monthlyRevenue: prev.monthlyRevenue + priceToAdd,
         };
       });
     } catch (err) {

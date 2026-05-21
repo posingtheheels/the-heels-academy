@@ -38,6 +38,8 @@ export async function GET(req: NextRequest) {
     
     // 3. Revenue this month
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // Revenue from paid plans
     const paidPlans = await prisma.userPlan.findMany({
       where: {
         paymentStatus: "PAGADO",
@@ -46,7 +48,23 @@ export async function GET(req: NextRequest) {
       include: { plan: true },
     });
     
-    const monthlyRevenue = paidPlans.reduce((acc: number, up: any) => acc + up.plan.price, 0);
+    const plansRevenue = paidPlans.reduce((acc: number, up: any) => acc + up.plan.price, 0);
+
+    // Revenue from confirmed/completed single bookings (not using a plan)
+    const paidSingleBookings = await prisma.booking.findMany({
+      where: {
+        userPlanId: null,
+        status: { in: ["CONFIRMADA", "REALIZADA"] },
+        dateTime: { gte: firstDayOfMonth },
+      },
+    });
+
+    const singleRevenue = paidSingleBookings.reduce((acc: number, b: any) => {
+      const price = b.modality === "ONLINE" ? 20 : 35;
+      return acc + price;
+    }, 0);
+
+    const monthlyRevenue = plansRevenue + singleRevenue;
     
     // 4. Pending payments
     const pendingBookingsList = await prisma.booking.findMany({
