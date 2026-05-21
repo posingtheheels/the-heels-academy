@@ -70,7 +70,7 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: 'Academia The Heels <soporte@posingtheheels.com>',
           to: user.email,
-          subject: \`✨ Nuevo registro de evolución: \${title}\`,
+          subject: `✨ Nuevo registro de evolución: ${title}`,
           html: emailHtml,
         });
       }

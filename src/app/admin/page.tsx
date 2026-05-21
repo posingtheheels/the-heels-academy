@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Calendar, CreditCard, Bell, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Users, Calendar, CreditCard, Bell, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle, Check } from "lucide-react";
 
 export default function AdminPage() {
   const [stats, setStats] = useState({
@@ -11,11 +11,43 @@ export default function AdminPage() {
     pendingPayments: 0,
     recentActivity: [] as any[],
     googleCalendarEnabled: false,
+    pendingBookings: [] as any[],
   });
   const [loading, setLoading] = useState(true);
 
   const [showTodayModal, setShowTodayModal] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  async function handleMarkAsPaid(bookingId: string) {
+    if (!confirm("¿Seguro que quieres marcar esta reserva como PAGADA?")) return;
+    
+    setUpdatingId(bookingId);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CONFIRMADA" }),
+      });
+      
+      if (!res.ok) throw new Error("Error al marcar como pagado");
+      
+      // Update local state to remove from pending
+      setStats(prev => {
+        const filteredPending = (prev.pendingBookings || []).filter((b: any) => b.id !== bookingId);
+        return {
+          ...prev,
+          pendingPayments: filteredPending.length,
+          pendingBookings: filteredPending,
+        };
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Hubo un error al actualizar el pago");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   useEffect(() => {
     async function fetchAdminStats() {
@@ -284,15 +316,27 @@ export default function AdminPage() {
                         </p>
                       </div>
                     </div>
-                    {b.user.phone && (
-                      <a 
-                        href={`https://wa.me/${b.user.phone.replace(/\s+/g, '')}`} 
-                        target="_blank"
-                        className="p-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-all"
+                    <div className="flex items-center gap-2">
+                      {b.user.phone && (
+                        <a 
+                          href={`https://wa.me/${b.user.phone.replace(/\s+/g, '')}`} 
+                          target="_blank"
+                          className="p-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-all"
+                          title="Enviar recordatorio"
+                        >
+                          <Bell size={14} />
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleMarkAsPaid(b.id)}
+                        disabled={updatingId === b.id}
+                        className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all disabled:opacity-50"
+                        title="Marcar como pagado"
                       >
-                        <Bell size={14} />
-                      </a>
-                    )}
+                        <Check size={14} />
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (

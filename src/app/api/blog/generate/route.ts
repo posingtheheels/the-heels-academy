@@ -38,31 +38,50 @@ export async function GET(req: NextRequest) {
     // Si hay más de 8 (raro), limitamos. Si hay menos, usamos los que haya.
     const datesToGenerate = scheduledDates.slice(0, 8);
 
-    const categories = ["POSING", "NUTRICION", "ENTRENAMIENTO", "PSICOLOGIA", "REGLAMENTO", "MASTERCLASS"];
+    const categories = ["POSING", "NUTRICION", "ENTRENAMIENTO", "PSICOLOGIA", "REGLAMENTO", "MASTERCLASS", "PREPARACION", "MENTALIDAD"];
+    
     const subTopics = [
-      "un error muy poco común pero devastador",
-      "el secreto mejor guardado de las top Olympias",
-      "cómo romper el estancamiento a nivel avanzado",
-      "la perspectiva estricta de los jueces centrales",
-      "el impacto invisible del estrés crónico",
-      "una técnica muy avanzada y poco conocida",
-      "errores típicos de las amateurs intentando ser Pro",
-      "desmitificando un dogma tóxico del fitness convencional",
-      "ajustes milimétricos que cambian todo tu físico en tarima",
-      "las claves científicas para maximizar los resultados"
+      "un error muy poco común pero devastador en la línea de poses",
+      "el secreto mejor guardado de las top Olympias sobre su micronutrición",
+      "cómo romper el estancamiento a nivel avanzado en el desarrollo de glúteos",
+      "la perspectiva estricta de los jueces centrales sobre la feminidad vs densidad",
+      "el impacto invisible del estrés crónico en la retención de líquidos",
+      "una técnica muy avanzada de control isométrico poco conocida",
+      "errores típicos de las amateurs intentando imitar el look Pro",
+      "desmitificando un dogma tóxico sobre la carga de hidratos",
+      "ajustes milimétricos en el calzado y su impacto en la postura",
+      "las claves científicas para maximizar la conexión mente-músculo",
+      "la gestión emocional del hambre en las últimas semanas de prep",
+      "el arte de las transiciones fluidas sin perder la tensión muscular",
+      "análisis de la evolución del criterio Wellness en la última temporada",
+      "suplementación específica para la salud hormonal en atletas",
+      "cómo proyectar seguridad absoluta ante un panel de jueces intimidante"
     ];
+
+    // Shuffle subTopics to avoid repetition
+    const shuffledSubTopics = [...subTopics].sort(() => Math.random() - 0.5);
+
+    // Obtener títulos existentes para evitar repeticiones
+    const existingPosts = await prisma.blogPost.findMany({
+      select: { title: true },
+      take: 20,
+      orderBy: { createdAt: 'desc' }
+    });
+    const existingTitles = existingPosts.map(p => p.title).join(", ");
 
     const generatedPosts = [];
 
     for (let i = 0; i < datesToGenerate.length; i++) {
       const date = datesToGenerate[i];
       const category = categories[i % categories.length];
-      const angle = subTopics[i % subTopics.length];
+      const angle = shuffledSubTopics[i % shuffledSubTopics.length];
       
       const prompt = `Eres la redactora jefa de "The Heels Academy", una academia de posing y preparación de élite para atletas Bikini y Wellness de la NPC e IFBB Pro League. 
       Escribe un artículo técnico de blog PROFESIONAL y con autoridad. NO repitas introducciones genéricas. Sé creativa y sumamente específica.
       
-      REQUSITOS CRÍTICOS:
+      IMPORTANTE: NO repitas temas ni títulos que ya hemos publicado recientemente: ${existingTitles}.
+      
+      REQUISITOS CRÍTICOS:
       - TEMA: ${category} en el contexto del culturismo femenino de competición.
       - ÁNGULO ESPECÍFICO: El artículo debe girar en torno a ${angle}.
       - EXTENSIÓN: Mínimo 800 palabras. Debe ser profundo y detallado.

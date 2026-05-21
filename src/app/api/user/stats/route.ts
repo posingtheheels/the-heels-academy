@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -42,8 +44,14 @@ export async function GET(req: NextRequest) {
       where: { userId },
     });
     const totalUsedFromPlans = allPlansForCount.reduce((acc: number, p: any) => acc + p.usedSessions, 0);
+    
+    // Extra bookings: not linked to a plan AND status is REALIZADA
     const extraDoneBookings = await prisma.booking.count({
-      where: { userId, userPlanId: null, status: "REALIZADA" },
+      where: { 
+        userId, 
+        userPlanId: null, 
+        status: "REALIZADA",
+      },
     });
     const completedClasses = totalUsedFromPlans + extraDoneBookings;
     

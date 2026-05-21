@@ -82,7 +82,20 @@ export default function DisponibilidadPage() {
     }
   }
 
-  async function handleDeleteSlot(id: string) {
+  async function handleDeleteSlot(id: string, e?: React.MouseEvent) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // Blur any active element to prevent the browser from scrolling to the top of the body when the focused element is removed from DOM
+    if (e && e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.blur();
+    }
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     if (!confirm("¿Seguro que quieres borrar este horario?")) return;
     
     setError("");
@@ -98,16 +111,28 @@ export default function DisponibilidadPage() {
       if (!res.ok) throw new Error(data.error || "Error al borrar");
       
       setSuccess("Horario borrado correctamente");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Save current scroll position
+      const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
       
       // Update local state immediately for better UX
       setSlots(prev => prev.filter(s => s.id !== id));
       
       // Refresh from server too
       fetchSlots();
+
+      // Force browser to retain scroll position across unmount/focus-jump
+      if (typeof window !== 'undefined') {
+        setTimeout(() => {
+          window.scrollTo(0, scrollY);
+        }, 0);
+        setTimeout(() => {
+          window.scrollTo(0, scrollY);
+        }, 50);
+      }
     } catch (err: any) {
       setError(err.message);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Removed window.scrollTo to keep user in place even on error
     } finally {
       setDeletingId(null);
     }
@@ -435,7 +460,8 @@ export default function DisponibilidadPage() {
                   {slot.available ? "Disponible" : "Ocupado"}
                 </span>
                 <button 
-                  onClick={() => handleDeleteSlot(slot.id)}
+                  type="button"
+                  onClick={(e) => handleDeleteSlot(slot.id, e)}
                   disabled={deletingId === slot.id}
                   className={`p-2 transition-colors ${deletingId === slot.id ? "text-charcoal-lighter animate-pulse" : "text-red-300 hover:text-red-500"}`}
                 >

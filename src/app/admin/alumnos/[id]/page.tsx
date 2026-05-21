@@ -333,6 +333,28 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
     }
   }
 
+  async function handleCompleteBooking(bookingId: string) {
+    setProcessingId(`complete-${bookingId}`);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "REALIZADA" }),
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Error al actualizar");
+      }
+      
+      await fetchAlumna();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -370,7 +392,10 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
 
   // Calcular el total de sesiones usadas (de bonos + clases sueltas realizadas)
   const totalUsedFromPlans = userPlans.reduce((acc: number, p: any) => acc + p.usedSessions, 0);
+  
+  // Extra bookings: not linked to a plan AND status is REALIZADA
   const extraDoneBookings = alumna.bookings?.filter((b: any) => !b.userPlanId && b.status === "REALIZADA").length || 0;
+  
   const totalActivityCount = totalUsedFromPlans + extraDoneBookings;
 
   return (
@@ -716,13 +741,22 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
                             </button>
                           )}
                           {booking.status !== "CANCELADA" && booking.status !== "REALIZADA" && (
-                            <button 
-                              onClick={() => handleCancelBooking(booking.id)}
-                              disabled={processingId === booking.id}
-                              className="btn-ghost !py-1.5 !px-3 text-[10px] font-bold text-red-400 hover:text-red-600 hover:bg-red-50"
-                            >
-                              {processingId === booking.id ? "..." : "CANCELAR"}
-                            </button>
+                            <>
+                              <button 
+                                onClick={() => handleCompleteBooking(booking.id)}
+                                disabled={processingId === `complete-${booking.id}`}
+                                className="btn-ghost !py-1.5 !px-3 text-[10px] font-bold text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50"
+                              >
+                                {processingId === `complete-${booking.id}` ? "..." : "MARCAR HECHA"}
+                              </button>
+                              <button 
+                                onClick={() => handleCancelBooking(booking.id)}
+                                disabled={processingId === booking.id}
+                                className="btn-ghost !py-1.5 !px-3 text-[10px] font-bold text-red-400 hover:text-red-600 hover:bg-red-50"
+                              >
+                                {processingId === booking.id ? "..." : "CANCELAR"}
+                              </button>
+                            </>
                           )}
                         </td>
                       </tr>

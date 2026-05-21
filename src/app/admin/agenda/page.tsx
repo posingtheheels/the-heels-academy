@@ -172,7 +172,7 @@ export default function AdminAgendaPage() {
                       </div>
                     ) : (
                       daySlots.map((slot: any) => (
-                        <AgendaCard key={slot.id} slot={slot} />
+                        <AgendaCard key={slot.id} slot={slot} onUpdate={fetchAgendaData} />
                       ))
                     )}
                  </div>
@@ -225,10 +225,27 @@ export default function AdminAgendaPage() {
   );
 }
 
-function AgendaCard({ slot }: { slot: any }) {
+function AgendaCard({ slot, onUpdate }: { slot: any, onUpdate: () => void }) {
+  const [loading, setLoading] = useState(false);
   const booking = slot.bookings[0];
   const time = new Date(slot.dateTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   const isOnline = booking.modality === "ONLINE";
+
+  async function handleComplete() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/bookings/${booking.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "REALIZADA" }),
+      });
+      if (res.ok) onUpdate();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className={`card-flat bg-white border border-blush-50 p-2 lg:p-4 shadow-sm hover:shadow-md transition-all overflow-hidden relative group ${
@@ -260,28 +277,40 @@ function AgendaCard({ slot }: { slot: any }) {
          </div>
       </div>
 
-      <div className="flex gap-1">
-         <Link 
-            href={`/admin/alumnos/${booking.userId}`}
-            className="flex-1 py-1.5 rounded-lg bg-blush-50/50 text-[8px] font-bold text-charcoal-lighter hover:bg-blush-100/50 transition-colors flex items-center justify-center uppercase tracking-wider"
-         >
-            INFO
-         </Link>
-         {booking.user.phone ? (
-           <a 
-              href={`https://wa.me/${booking.user.phone.replace(/\s+/g, '')}?text=Hola%20${booking.user.name.split(' ')[0]}!%20Te%20escribo%20de%20The%20Heels`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-1.5 rounded-lg bg-charcoal text-[8px] font-bold text-white hover:bg-charcoal/90 transition-colors flex items-center justify-center uppercase tracking-wider"
+      <div className="flex flex-col gap-1">
+         <div className="flex gap-1">
+           <Link 
+              href={`/admin/alumnos/${booking.userId}`}
+              className="flex-1 py-1.5 rounded-lg bg-blush-50/50 text-[8px] font-bold text-charcoal-lighter hover:bg-blush-100/50 transition-colors flex items-center justify-center uppercase tracking-wider"
            >
-              WHATSAPP
-           </a>
-         ) : (
+              INFO
+           </Link>
+           {booking.user.phone ? (
+             <a 
+                href={`https://wa.me/${booking.user.phone.replace(/\s+/g, '')}?text=Hola%20${booking.user.name.split(' ')[0]}!%20Te%20escribo%20de%20The%20Heels`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-1.5 rounded-lg bg-charcoal text-[8px] font-bold text-white hover:bg-charcoal/90 transition-colors flex items-center justify-center uppercase tracking-wider"
+             >
+                WHATSAPP
+             </a>
+           ) : (
+             <button 
+                disabled
+                className="flex-1 py-1.5 rounded-lg bg-charcoal/30 text-[8px] font-bold text-white/50 cursor-not-allowed flex items-center justify-center uppercase tracking-wider"
+             >
+                SIN TELF.
+             </button>
+           )}
+         </div>
+         
+         {booking.status !== "REALIZADA" && (
            <button 
-              disabled
-              className="flex-1 py-1.5 rounded-lg bg-charcoal/30 text-[8px] font-bold text-white/50 cursor-not-allowed flex items-center justify-center uppercase tracking-wider"
+             onClick={handleComplete}
+             disabled={loading}
+             className="w-full py-1.5 rounded-lg bg-emerald-500 text-[8px] font-bold text-white hover:bg-emerald-600 transition-colors flex items-center justify-center uppercase tracking-wider shadow-sm"
            >
-              SIN TELF.
+             {loading ? "..." : "MARCAR HECHA"}
            </button>
          )}
       </div>
