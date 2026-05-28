@@ -69,13 +69,11 @@ export async function GET(req: NextRequest) {
     });
     const existingTitles = existingPosts.map(p => p.title).join(", ");
 
-    const generatedPosts = [];
-
-    for (let i = 0; i < datesToGenerate.length; i++) {
-      const date = datesToGenerate[i];
+    // Generar todas las promesas de completado en paralelo
+    const completionPromises = datesToGenerate.map(async (date, i) => {
       const category = categories[i % categories.length];
       const angle = shuffledSubTopics[i % shuffledSubTopics.length];
-      
+
       const prompt = `Eres la redactora jefa de "The Heels Academy", una academia de posing y preparación de élite para atletas Bikini y Wellness de la NPC e IFBB Pro League. 
       Escribe un artículo técnico de blog PROFESIONAL y con autoridad. NO repitas introducciones genéricas. Sé creativa y sumamente específica.
       
@@ -113,7 +111,15 @@ export async function GET(req: NextRequest) {
       });
 
       const result = JSON.parse(completion.choices[0].message.content || "{}");
-      
+      return { result, date };
+    });
+
+    // Esperar a que se resuelvan todas las llamadas de IA de forma simultánea
+    const completionsResults = await Promise.all(completionPromises);
+
+    // Guardar en la base de datos de manera secuencial para evitar colisiones de slug/transacciones
+    const generatedPosts = [];
+    for (const { result, date } of completionsResults) {
       // Crear el slug
       let slug = result.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       // Check if slug exists
