@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const { data, error } = await resend.emails.send({
-        from: "The Heels <onboarding@resend.dev>",
+        from: "The Heels <soporte@posingtheheels.com>",
         to: email,
         subject: "🔒 Restablecer tu contraseña - The Heels",
         html: `

@@ -479,26 +479,6 @@ export default function AlumnaFichaPage({ params }: { params: { id: string } }) 
               </button>
             </div>
           </div>
-
-          {/* Activity Mini Stats */}
-          <div className="card bg-charcoal text-white p-6 shadow-elegant overflow-hidden relative">
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/5 rounded-full blur-2xl" />
-            <h3 className="text-xs uppercase tracking-widest text-white/50 mb-4 flex items-center gap-2">
-              <TrendingUp size={14} /> Resumen Actividad
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-2xl font-heading font-bold">{totalActivityCount}</p>
-                <p className="text-[10px] text-white/40 uppercase tracking-tighter">Clases hechas</p>
-              </div>
-              <div>
-                <p className="text-2xl font-heading font-bold tracking-tight text-blush-300">
-                  {activePlans.reduce((acc: number, p: any) => acc + p.sessionsRemaining, 0)}
-                </p>
-                <p className="text-[10px] text-white/40 uppercase tracking-tighter">Sesiones disp.</p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Right Column: Main Content */}
