@@ -80,7 +80,18 @@ export async function GET(req: NextRequest) {
       include: { user: { select: { name: true } } },
     });
     
-    const googleCalendarEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN);
+    // Check if refresh token is in DB or ENV
+    let hasRefreshToken = !!process.env.GOOGLE_REFRESH_TOKEN;
+    if (!hasRefreshToken) {
+      const storedConfig = await prisma.adminTask.findUnique({
+        where: { id: "google-calendar-config" }
+      }).catch(() => null);
+      if (storedConfig?.description) {
+        hasRefreshToken = true;
+      }
+    }
+
+    const googleCalendarEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && hasRefreshToken);
     
     return NextResponse.json({
       userCount,
