@@ -70,6 +70,13 @@ export default function AdminAgendaPage() {
       
       console.log(`[Agenda] ${confirmedSlots.length} confirmed slots`);
       setSlots(confirmedSlots);
+
+      // Sync any missing future events to Google Calendar in the background
+      fetch("/api/admin/calendar/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ syncAll: true })
+      }).catch(err => console.error("[Agenda] Auto-sync error:", err));
     } catch (err) {
       console.error("[Agenda] Error:", err);
     } finally {

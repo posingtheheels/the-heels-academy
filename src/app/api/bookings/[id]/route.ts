@@ -232,6 +232,13 @@ export async function PATCH(
           }).catch(console.error);
        }
 
+       // Background task: sync to Google Calendar if confirmed
+       if (status === "CONFIRMADA") {
+          import("@/lib/google-calendar").then(({ syncBookingToGoogleCalendar }) => {
+            syncBookingToGoogleCalendar(params.id);
+          }).catch(console.error);
+       }
+
        return NextResponse.json(updated);
     }
 

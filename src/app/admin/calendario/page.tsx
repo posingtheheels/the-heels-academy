@@ -30,6 +30,13 @@ export default function AdminCalendarPage() {
       const data = await res.json();
       setSlots(data.slots || []);
       setTasks(data.tasks || []);
+
+      // Sync any missing future events to Google Calendar in the background
+      fetch("/api/admin/calendar/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ syncAll: true })
+      }).catch(err => console.error("[Calendar] Auto-sync error:", err));
     } catch (err) {
       console.error(err);
     } finally {
