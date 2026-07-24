@@ -363,8 +363,8 @@ export default function BookingPage() {
                       )}
                     </button>
                     
-                    {/* Hide pay-in-class if online is selected for AMBAS slots */}
-                    {(!(selectedModality[slot.id] === "ONLINE") || slot.type === "AMBAS") && (
+                    {/* Hide pay-in-class if online is selected */}
+                    {((selectedModality[slot.id] || (slot.type === "ONLINE" ? "ONLINE" : "PRESENCIAL")) === "PRESENCIAL") && (
                       <button 
                         onClick={() => handleBook(slot.id, "EN_CLASE")}
                         disabled={bookingLoading}

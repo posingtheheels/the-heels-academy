@@ -83,6 +83,11 @@ export async function POST(req: NextRequest) {
       // Determine requested modality (or default to slot type if not specified)
       let targetModality = modality || (slotType === "AMBAS" ? "PRESENCIAL" : slotType);
 
+      // Security check: only allow pay in class ("EN_CLASE") for PRESENCIAL bookings (unless admin)
+      if (paymentMethod === "EN_CLASE" && targetModality === "ONLINE" && !isAdmin) {
+        throw new Error("ERROR: Las clases Online no se pueden reservar con la opción de pago en clase. Debes pagarlas previamente o usar un bono.");
+      }
+
       // Case A: Plan specified by admin 
       // Case B: Automatic selection for student (not EN_CLASE)
       if (!finalUserPlanId && paymentMethod !== "EN_CLASE") {
