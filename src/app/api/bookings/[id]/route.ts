@@ -248,3 +248,78 @@ export async function PATCH(
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
+
+// DELETE: Delete booking (admin only)
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const isAdmin = (session.user as any).role === "ADMIN";
+    if (!isAdmin) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: params.id },
+      include: { slot: true },
+    });
+
+    if (!booking) {
+      return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 });
+    }
+
+    // Perform deletion in transaction
+    await prisma.$transaction(async (tx: any) => {
+      // 1. Delete the booking
+      await tx.booking.delete({
+        where: { id: params.id }
+      });
+
+      // 2. Mark slot as available if NO OTHER active bookings exist
+      const activeBookingsCount = await tx.booking.count({
+        where: {
+          slotId: booking.slotId,
+          status: { in: ["CONFIRMADA", "PENDIENTE_PAGO", "REALIZADA"] }
+        }
+      });
+
+      if (activeBookingsCount === 0) {
+        await tx.slot.update({
+          where: { id: booking.slotId },
+          data: { available: true },
+        });
+      }
+
+      // 3. Return session to plan if it was using one
+      if (booking.userPlanId) {
+        const userPlan = await tx.userPlan.findUnique({
+          where: { id: booking.userPlanId }
+        });
+        
+        if (userPlan && userPlan.usedSessions > 0) {
+          await tx.userPlan.update({
+            where: { id: booking.userPlanId },
+            data: { usedSessions: { decrement: 1 } },
+          });
+        }
+      }
+    });
+
+    // Background task: delete from Google Calendar
+    import("@/lib/google-calendar").then(({ deleteGoogleCalendarEvent }) => {
+      deleteGoogleCalendarEvent(params.id);
+    }).catch(console.error);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Booking delete error:", error);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
+

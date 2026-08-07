@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Calendar, CreditCard, Bell, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle, Check } from "lucide-react";
+import { Users, Calendar, CreditCard, Bell, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle, Check, Trash2 } from "lucide-react";
 
 export default function AdminPage() {
   const [stats, setStats] = useState({
@@ -52,6 +52,65 @@ export default function AdminPage() {
       setUpdatingId(null);
     }
   }
+
+  async function handleDeleteBooking(bookingId: string) {
+    if (!confirm("¿Seguro que quieres ELIMINAR esta reserva por completo? (Se liberará el hueco en la agenda y se devolverá la sesión al bono de la alumna si corresponde)")) return;
+    
+    setUpdatingId(bookingId);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "DELETE"
+      });
+      
+      if (!res.ok) throw new Error("Error al eliminar la reserva");
+      
+      // Update local state to remove from pending
+      setStats(prev => {
+        const filteredPending = (prev.pendingBookings || []).filter((b: any) => b.id !== bookingId);
+        return {
+          ...prev,
+          pendingPayments: filteredPending.length,
+          pendingBookings: filteredPending,
+        };
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Hubo un error al eliminar la reserva");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  async function handleCancelBooking(bookingId: string) {
+    if (!confirm("¿Seguro que quieres CANCELAR esta reserva? (Se liberará el hueco en la agenda y se devolverá la sesión al bono de la alumna si corresponde)")) return;
+    
+    setUpdatingId(bookingId);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "CANCEL" }),
+      });
+      
+      if (!res.ok) throw new Error("Error al cancelar la reserva");
+      
+      // Update local state to remove from pending
+      setStats(prev => {
+        const filteredPending = (prev.pendingBookings || []).filter((b: any) => b.id !== bookingId);
+        return {
+          ...prev,
+          pendingPayments: filteredPending.length,
+          pendingBookings: filteredPending,
+        };
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Hubo un error al cancelar la reserva");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
 
   useEffect(() => {
     async function fetchAdminStats() {
@@ -339,6 +398,24 @@ export default function AdminPage() {
                         title="Marcar como pagado"
                       >
                         <Check size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCancelBooking(b.id)}
+                        disabled={updatingId === b.id}
+                        className="p-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all disabled:opacity-50"
+                        title="Cancelar reserva"
+                      >
+                        <XCircle size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBooking(b.id)}
+                        disabled={updatingId === b.id}
+                        className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all disabled:opacity-50"
+                        title="Eliminar reserva"
+                      >
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
