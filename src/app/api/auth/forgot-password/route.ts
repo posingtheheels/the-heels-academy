@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
 import crypto from "crypto";
+import { normalizarEmail } from "@/lib/email-normalize";
+import { permitirPorIp } from "@/lib/rate-limit";
+
+// Respuesta identica pase lo que pase: si variara segun el email exista o no,
+// cualquiera podria averiguar desde fuera quien tiene cuenta en la academia.
+const RESPUESTA_GENERICA = {
+  message: "Si el email está registrado, recibirás un enlace de recuperación pronto.",
+};
 
 export async function POST(req: NextRequest) {
   try {
-    let { email } = await req.json();
-    email = email?.trim().toLowerCase();
+    if (!permitirPorIp(req, "forgot-password", 5, 15 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: "Demasiadas solicitudes. Espera unos minutos e inténtalo de nuevo." },
+        { status: 429 }
+      );
+    }
+
+    const email = normalizarEmail((await req.json()).email);
 
     if (!email) {
       return NextResponse.json({ error: "Email es obligatorio" }, { status: 400 });
@@ -17,10 +31,8 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      // Don't reveal account doesn't exist for security, but we don't send anything
-      return NextResponse.json({ 
-        message: "Si el email está registrado, recibirás un enlace de recuperación pronto." 
-      });
+      // No se revela que la cuenta no existe; tampoco se envía nada.
+      return NextResponse.json(RESPUESTA_GENERICA);
     }
 
     // Generate token
@@ -40,7 +52,7 @@ export async function POST(req: NextRequest) {
       console.warn("Prisma update failed, attempting raw update:", err);
       // Fallback for when Prisma Client is out of sync but DB is updated
       await prisma.$executeRawUnsafe(
-        'UPDATE "User" SET "resetToken" = ?, "resetTokenExpires" = ? WHERE "id" = ?',
+        'UPDATE "User" SET "resetToken" = $1, "resetTokenExpires" = $2::timestamp WHERE "id" = $3',
         token,
         expires.toISOString(),
         user.id
@@ -77,22 +89,16 @@ export async function POST(req: NextRequest) {
 
       if (error) {
         console.error("Resend delivery failed:", error);
-        return NextResponse.json({ error: "Resend Error", details: error.message }, { status: 500 });
       }
     } catch (emailErr: any) {
+      // Un fallo de envío se registra, pero la respuesta no cambia: si devolviera
+      // un 500 solo para los emails existentes, seguiria delatandolos.
       console.error("Error in email sending process:", emailErr);
-      return NextResponse.json({ error: "Email Error", details: emailErr.message }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      success: true,
-      message: "Si el email está registrado, recibirás un enlace de recuperación pronto." 
-    });
+    return NextResponse.json(RESPUESTA_GENERICA);
   } catch (error: any) {
     console.error("Forgot password error:", error.message || error);
-    return NextResponse.json({ 
-      error: "Error interno", 
-      details: error.message 
-    }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
