@@ -52,8 +52,12 @@ model UserPlan {
   totalSessions   Int
   usedSessions    Int       @default(0)
   paymentStatus   String    @default("PENDIENTE")
-  stripeSessionId String?
+  // Único: es la clave de idempotencia del webhook de Stripe. En Postgres los
+  // NULL no colisionan entre sí, así que los bonos asignados a mano conviven.
+  stripeSessionId String?   @unique
   createdAt       DateTime  @default(now())
+  // Los bonos de The Heels no caducan. Se mantiene la columna por compatibilidad
+  // con los registros antiguos, pero no se escribe ni se filtra por ella.
   expiresAt       DateTime?
   bookings        Booking[]
   plan            Plan      @relation(fields: [planId], references: [id])

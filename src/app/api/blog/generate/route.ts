@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 export const maxDuration = 60; // Configuración para Vercel (aumenta el timeout)
 import OpenAI from "openai";
 import { addMonths, startOfMonth, addDays, getDay, format, setDate } from "date-fns";
@@ -10,8 +11,8 @@ const openai = new OpenAI({
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Este endpoint gasta 8 llamadas a GPT-4o por ejecución: si no hay secreto, no se abre.
+    if (!isAuthorizedCron(req)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

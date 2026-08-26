@@ -5,8 +5,18 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Fetch latest 3 posts (removed published filter for test)
+    // Solo artículos ya publicados y cuya fecha programada haya llegado.
+    // Este endpoint alimenta la landing pública: los borradores generados por
+    // IA no pueden asomar aquí antes de que Alejandra los revise.
+    const now = new Date();
     const posts = await (prisma as any).blogPost.findMany({
+      where: {
+        published: true,
+        OR: [
+          { scheduledAt: null },
+          { scheduledAt: { lte: now } },
+        ],
+      },
       orderBy: { createdAt: "desc" },
       take: 3,
     });
