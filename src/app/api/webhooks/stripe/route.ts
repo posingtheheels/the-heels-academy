@@ -29,23 +29,54 @@ export async function POST(req: NextRequest) {
     const userId = session.metadata?.userId;
     const planId = session.metadata?.planId;
 
+    // Con métodos de pago asíncronos el evento puede llegar sin estar cobrado todavía.
+    if (session.payment_status !== "paid") {
+      console.log(`Sesión ${session.id} recibida sin cobrar (${session.payment_status}); se ignora.`);
+      return NextResponse.json({ received: true });
+    }
+
     if (userId && planId) {
       console.log(`Payment confirmed for user ${userId} and plan ${planId}`);
-      
+
+      // Stripe reintenta el webhook si no respondemos 2xx a tiempo. Sin esta
+      // comprobación, un reintento regalaba un segundo bono.
+      const yaProcesado = await prisma.userPlan.findFirst({
+        where: { stripeSessionId: session.id },
+        select: { id: true },
+      });
+
+      if (yaProcesado) {
+        console.log(`Sesión ${session.id} ya procesada (bono ${yaProcesado.id}); no se duplica.`);
+        return NextResponse.json({ received: true, duplicated: true });
+      }
+
       const plan = await prisma.plan.findUnique({ where: { id: planId } });
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (plan && user) {
-        // Add classes to the user
-        await prisma.userPlan.create({
-          data: {
-            userId,
-            planId,
-            totalSessions: plan.totalSessions,
-            usedSessions: 0,
-            paymentStatus: "PAGADO",
-            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        // El bono se guarda ANTES de mandar los correos: si el envío se atasca y
+        // Vercel corta la función, el reintento de Stripe encontrará el registro
+        // y no volverá a acreditar sesiones.
+        try {
+          await prisma.userPlan.create({
+            data: {
+              userId,
+              planId,
+              totalSessions: plan.totalSessions,
+              usedSessions: 0,
+              paymentStatus: "PAGADO",
+              stripeSessionId: session.id,
+              // Los bonos de The Heels no caducan: no se guarda fecha de expiración.
+              expiresAt: null,
+            }
+          });
+        } catch (e: any) {
+          // P2002 = índice único de stripeSessionId. Dos reintentos a la vez.
+          if (e?.code === "P2002") {
+            console.log(`Carrera de reintentos en ${session.id}; el bono ya existe.`);
+            return NextResponse.json({ received: true, duplicated: true });
           }
-        });
+          throw e;
+        }
 
         try {
           const { resend } = await import("@/lib/resend");

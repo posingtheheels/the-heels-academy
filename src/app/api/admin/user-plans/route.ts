@@ -21,9 +21,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Plan no encontrado" }, { status: 404 });
     }
 
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 90); // Default validity
-
     const userPlan = await prisma.userPlan.create({
       data: {
         userId,
@@ -31,7 +28,8 @@ export async function POST(req: NextRequest) {
         totalSessions: plan.totalSessions,
         usedSessions: 0,
         paymentStatus: "PAGADO", // Admin manually assigning means it's set as paid
-        expiresAt,
+        // Los bonos no caducan: la alumna reserva cuando quiera.
+        expiresAt: null,
       },
     });
 
