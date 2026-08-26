@@ -2,6 +2,12 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { normalizarEmail } from "@/lib/email-normalize";
+
+// Hash válido de bcrypt que no corresponde a ninguna contraseña real. Sirve para
+// gastar el mismo tiempo de CPU cuando el email no existe (ver authorize).
+const HASH_DESCARTE =
+  "$2a$12$.G46ElMJ6HKRzEHwIskLZeDVPIjdlRxMoqpCWTIQsbur64ExgQbsi";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -16,21 +22,24 @@ export const authOptions: AuthOptions = {
           throw new Error("Email y contraseña son obligatorios");
         }
 
+        const email = normalizarEmail(credentials.email);
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
-        if (!user) {
-          throw new Error("No existe una cuenta con ese email");
-        }
-
-        const isValid = await bcrypt.compare(
+        // Se compara siempre, incluso sin usuario, contra un hash de descarte. Así
+        // el tiempo de respuesta no delata si el email existe.
+        const hashAComparar = user?.password ?? HASH_DESCARTE;
+        const passwordCorrecta = await bcrypt.compare(
           credentials.password,
-          user.password
+          hashAComparar
         );
 
-        if (!isValid) {
-          throw new Error("Contraseña incorrecta");
+        // Mismo mensaje si el email no existe o si la contraseña falla: distinguirlos
+        // permitía averiguar desde fuera qué correos tienen cuenta en la academia.
+        if (!user || !passwordCorrecta) {
+          throw new Error("Email o contraseña incorrectos");
         }
 
         return {

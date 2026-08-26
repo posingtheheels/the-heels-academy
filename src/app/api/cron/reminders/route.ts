@@ -5,6 +5,42 @@ import { isAuthorizedCron } from '@/lib/cron-auth';
 
 export const dynamic = 'force-dynamic';
 
+/** Día natural en España, en formato YYYY-MM-DD. */
+function diaEnMadrid(fecha: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Madrid',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(fecha);
+}
+
+/**
+ * Cómo referirse a la clase según cuándo cae: "hoy", "mañana", "el jueves"...
+ *
+ * Se compara por día natural español y no por horas sueltas, que es como lo
+ * entiende la alumna: una clase a las 9:00 de mañana es "mañana" tanto si
+ * faltan 20 horas como si faltan 26.
+ */
+function describirAntelacion(clase: Date, ahora: Date): string {
+  const hoy = diaEnMadrid(ahora);
+  const dia = diaEnMadrid(clase);
+
+  const dias = Math.round(
+    (Date.parse(`${dia}T00:00:00Z`) - Date.parse(`${hoy}T00:00:00Z`)) / 86400000
+  );
+
+  if (dias <= 0) return 'hoy';
+  if (dias === 1) return 'mañana';
+  if (dias === 2) return 'pasado mañana';
+
+  const diaSemana = new Intl.DateTimeFormat('es-ES', {
+    timeZone: 'Europe/Madrid',
+    weekday: 'long',
+  }).format(clase);
+  return `el ${diaSemana}`;
+}
+
 // This endpoint should be called by a cron job once an hour
 export async function GET(req: NextRequest) {
   if (!isAuthorizedCron(req)) {
@@ -58,7 +94,10 @@ export async function GET(req: NextRequest) {
         minute: '2-digit',
       });
 
-      const timeText = is48h ? 'en 48 horas' : 'mañana';
+      // El cron corre una vez al día, no cada hora, así que "mañana" y "en 48
+      // horas" fijos mentían: una clase de hoy a las 9:00 se anunciaba como
+      // "mañana". El texto se calcula con las horas que faltan de verdad.
+      const timeText = describirAntelacion(new Date(booking.dateTime), new Date());
 
       try {
         const { error } = await resend.emails.send({

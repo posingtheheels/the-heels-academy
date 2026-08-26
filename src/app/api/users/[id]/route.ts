@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { normalizarEmail } from "@/lib/email-normalize";
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +62,9 @@ export async function PATCH(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { email, name, phone, password: newPassword } = await req.json();
+    const cuerpo = await req.json();
+    const { name, phone, password: newPassword } = cuerpo;
+    const email = cuerpo.email ? normalizarEmail(cuerpo.email) : undefined;
     
     // Hash password if provided
     let hashedPassword;

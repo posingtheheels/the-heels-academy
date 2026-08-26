@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { normalizarEmail, pareceEmail } from "@/lib/email-normalize";
 
 export async function GET(req: NextRequest) {
   try {
@@ -41,7 +42,15 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { name, email, phone, category, federation } = await req.json();
+    const cuerpo = await req.json();
+    const { name, phone, category, federation } = cuerpo;
+    // Se guarda siempre en minúsculas para que el login y la recuperación de
+    // contraseña lo encuentren (Postgres distingue mayúsculas).
+    const email = cuerpo.email ? normalizarEmail(cuerpo.email) : undefined;
+
+    if (email && !pareceEmail(email)) {
+      return NextResponse.json({ error: "Ese email no parece válido" }, { status: 400 });
+    }
 
     // Check if email already exists for another user
     if (email) {

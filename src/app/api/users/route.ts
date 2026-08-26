@@ -10,9 +10,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
     
+    // Campos explícitos: con `include` viajaban al navegador el hash de la
+    // contraseña y el token de recuperación de cada alumna.
     const users = await prisma.user.findMany({
       orderBy: { createdAt: "desc" },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        category: true,
+        federation: true,
+        notes: true,
+        createdAt: true,
         userPlans: {
           where: {
             usedSessions: { lt: prisma.userPlan.fields.totalSessions }

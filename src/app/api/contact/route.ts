@@ -1,30 +1,46 @@
 import { Resend } from 'resend';
 import { NextRequest, NextResponse } from 'next/server';
+import { permitirPorIp } from '@/lib/rate-limit';
+import { escaparHtml } from '@/lib/html-escape';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   try {
+    // Formulario abierto que dispara un correo: sin freno es un buzón de spam
+    // y se come la cuota de envío del dominio.
+    if (!permitirPorIp(req, 'contact', 3, 15 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: 'Has enviado varios mensajes seguidos. Espera unos minutos antes de volver a escribirnos.' },
+        { status: 429 }
+      );
+    }
+
     const { name, email, phone, message } = await req.json();
 
     if (!name || !email || !message) {
       return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 });
     }
 
+    if (String(message).length > 5000) {
+      return NextResponse.json({ error: 'El mensaje es demasiado largo' }, { status: 400 });
+    }
+
     // Sending to admin address
     const { data, error } = await resend.emails.send({
       from: 'Contacto Web <soporte@posingtheheels.com>',
       to: 'posingtheheels@gmail.com',
-      subject: `👠 Nuevo mensaje de ${name}`,
+      replyTo: String(email),
+      subject: `👠 Nuevo mensaje de ${escaparHtml(name)}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 10px;">
           <h2 style="color: #333; border-bottom: 2px solid #ffccd5; padding-bottom: 10px;">Nuevo mensaje de contacto</h2>
-          <p style="margin: 15px 0;"><strong>Nombre:</strong> ${name}</p>
-          <p style="margin: 15px 0;"><strong>Email:</strong> ${email}</p>
-          <p style="margin: 15px 0;"><strong>Teléfono:</strong> ${phone || 'No proporcionado'}</p>
+          <p style="margin: 15px 0;"><strong>Nombre:</strong> ${escaparHtml(name)}</p>
+          <p style="margin: 15px 0;"><strong>Email:</strong> ${escaparHtml(email)}</p>
+          <p style="margin: 15px 0;"><strong>Teléfono:</strong> ${escaparHtml(phone || 'No proporcionado')}</p>
           <p style="margin: 15px 0;"><strong>Mensaje:</strong></p>
-          <div style="background: #fdf2f4; padding: 15px; border-radius: 8px; font-style: italic; color: #555;">
-            ${message}
+          <div style="background: #fdf2f4; padding: 15px; border-radius: 8px; font-style: italic; color: #555; white-space: pre-wrap;">
+            ${escaparHtml(message)}
           </div>
           <hr style="border: none; border-top: 1px solid #eeeeee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #999;">Recibido desde el formulario de contacto de The Heels Academy.</p>

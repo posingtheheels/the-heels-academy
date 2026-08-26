@@ -11,7 +11,7 @@ export const oauth2Client = new google.auth.OAuth2(
   REDIRECT_URI
 );
 
-export function getGoogleAuthUrl() {
+export function getGoogleAuthUrl(state?: string) {
   const scopes = [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/calendar.events',
@@ -21,6 +21,10 @@ export function getGoogleAuthUrl() {
     access_type: 'offline', // Required to get refresh token
     prompt: 'consent',
     scope: scopes,
+    // Google devuelve este valor tal cual en el callback. Comparándolo con la
+    // cookie que dejamos al iniciar, sabemos que la vuelta corresponde a una
+    // conexión que empezó aquí y no a un código traído de fuera.
+    ...(state ? { state } : {}),
   });
 }
 

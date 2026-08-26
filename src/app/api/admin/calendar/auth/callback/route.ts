@@ -1,17 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getTokensFromCode } from "@/lib/google-calendar";
+import { COOKIE_ESTADO_GOOGLE } from "@/lib/google-oauth-state";
 
 export async function GET(req: NextRequest) {
+  // Esta ruta guarda el refresh token del calendario de la academia. Antes
+  // aceptaba cualquier "code" de cualquiera, así que un desconocido podía
+  // sustituir el token por el suyo. Ahora exige dos cosas: sesión de ADMIN y
+  // que el "state" coincida con el que se emitió al empezar la conexión.
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any)?.role !== "ADMIN") {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
+  const estadoRecibido = searchParams.get("state");
+  const estadoEsperado = req.cookies.get(COOKIE_ESTADO_GOOGLE)?.value;
 
   if (!code) {
     return NextResponse.json({ error: "Falta el código de autorización" }, { status: 400 });
   }
 
+  if (!estadoEsperado || !estadoRecibido || estadoRecibido !== estadoEsperado) {
+    return NextResponse.json(
+      { error: "La conexión con Google no se inició desde aquí. Vuelve a intentarlo desde el panel." },
+      { status: 400 }
+    );
+  }
+
   try {
     const tokens = await getTokensFromCode(code);
-    
+
     // Auto-save the token to the database using an AdminTask with a special title
     // This avoids having to manually update Vercel environment variables
     const { prisma } = await import("@/lib/prisma");
@@ -19,7 +40,7 @@ export async function GET(req: NextRequest) {
       const configTitle = "SYSTEM_CONFIG_GOOGLE_REFRESH_TOKEN";
       await prisma.adminTask.upsert({
         where: { id: "google-calendar-config" }, // Fixed ID for the config task
-        update: { 
+        update: {
           title: configTitle,
           description: tokens.refresh_token,
           completed: true,
@@ -34,7 +55,7 @@ export async function GET(req: NextRequest) {
         }
       });
     }
-    
+
     const html = `
       <html>
         <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #fdf2f4; color: #333;">
@@ -52,9 +73,14 @@ export async function GET(req: NextRequest) {
       </html>
     `;
 
-    return new NextResponse(html, {
+    const respuesta = new NextResponse(html, {
       headers: { "Content-Type": "text/html" },
     });
+
+    // El state es de un solo uso.
+    respuesta.cookies.delete(COOKIE_ESTADO_GOOGLE);
+
+    return respuesta;
   } catch (error: any) {
     console.error("Token Exchange Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
