@@ -48,7 +48,12 @@ export async function GET(req: NextRequest) {
       include: { plan: true },
     });
     
-    const plansRevenue = paidPlans.reduce((acc: number, up: any) => acc + up.plan.price, 0);
+    // pricePaid guarda lo que se cobro en su dia; plan.price solo cubre los
+    // registros antiguos anteriores a esa columna.
+    const plansRevenue = paidPlans.reduce(
+      (acc: number, up: any) => acc + (up.pricePaid ?? up.plan.price),
+      0
+    );
 
     // Revenue from confirmed/completed single bookings (not using a plan)
     const paidSingleBookings = await prisma.booking.findMany({
@@ -59,9 +64,16 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Tarifa vigente de la clase suelta, leida de BD: antes estaba fijada a
+    // 20/35 y se quedaba obsoleta en cada subida de precios.
+    const clasesSueltas = await prisma.plan.findMany({
+      where: { totalSessions: 1 },
+      select: { type: true, price: true },
+    });
+    const precioSuelta = new Map(clasesSueltas.map((p: any) => [p.type, p.price]));
+
     const singleRevenue = paidSingleBookings.reduce((acc: number, b: any) => {
-      const price = b.modality === "ONLINE" ? 20 : 35;
-      return acc + price;
+      return acc + (precioSuelta.get(b.modality) ?? 0);
     }, 0);
 
     const monthlyRevenue = plansRevenue + singleRevenue;

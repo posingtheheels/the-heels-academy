@@ -63,6 +63,12 @@ export async function POST(req: NextRequest) {
               planId,
               totalSessions: plan.totalSessions,
               usedSessions: 0,
+              // Lo que Stripe ha cobrado de verdad, no la tarifa vigente: si
+              // manana suben los precios, este importe no se mueve.
+              pricePaid:
+                typeof session.amount_total === "number"
+                  ? session.amount_total / 100
+                  : plan.price,
               paymentStatus: "PAGADO",
               stripeSessionId: session.id,
               // Los bonos de The Heels no caducan: no se guarda fecha de expiración.

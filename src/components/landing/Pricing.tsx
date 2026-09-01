@@ -8,7 +8,7 @@ const pricingPlans = [
     name: "Clase Individual",
     modality: "Online",
     duration: "30 min",
-    price: 20,
+    price: 25,
     type: "ONLINE" as const,
     features: [
       "1 clase por videollamada",
@@ -21,20 +21,20 @@ const pricingPlans = [
     name: "Bono 5 Clases",
     modality: "Online",
     duration: "2,5h",
-    price: 75,
+    price: 90,
     type: "ONLINE" as const,
     features: [
       "5 clases por videollamada",
       "Evaluación inicial del nivel",
       "Revisión entre clases vía WhatsApp",
     ],
-    popular: false,
+    popular: true,
   },
   {
     name: "Bono 10 Clases",
     modality: "Online",
     duration: "5h",
-    price: 140,
+    price: 160,
     type: "ONLINE" as const,
     features: [
       "10 clases por videollamada",
@@ -42,13 +42,13 @@ const pricingPlans = [
       "Revisión entre clases vía WhatsApp",
       "Contacto 24h para dudas",
     ],
-    popular: true,
+    popular: false,
   },
   {
     name: "Clase Individual",
     modality: "Presencial",
     duration: "1h",
-    price: 35,
+    price: 50,
     type: "PRESENCIAL" as const,
     features: [
       "1 clase presencial",
@@ -61,20 +61,20 @@ const pricingPlans = [
     name: "Bono 5 Clases",
     modality: "Presencial",
     duration: "5h",
-    price: 165,
+    price: 200,
     type: "PRESENCIAL" as const,
     features: [
       "5 clases presenciales",
       "Evaluación inicial del nivel",
       "Revisión entre clases vía WhatsApp",
     ],
-    popular: false,
+    popular: true,
   },
   {
     name: "Bono 10 Clases",
     modality: "Presencial",
     duration: "10h",
-    price: 300,
+    price: 360,
     type: "PRESENCIAL" as const,
     features: [
       "10 clases presenciales",
@@ -82,7 +82,7 @@ const pricingPlans = [
       "Revisión entre clases vía WhatsApp",
       "Contacto 24h para dudas",
     ],
-    popular: true,
+    popular: false,
   },
 ];
 

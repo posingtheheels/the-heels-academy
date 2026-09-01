@@ -51,6 +51,9 @@ model UserPlan {
   planId          String
   totalSessions   Int
   usedSessions    Int       @default(0)
+  // Importe realmente cobrado al comprar. Se congela aqui para que una subida
+  // de tarifas no reescriba los ingresos historicos.
+  pricePaid       Float?
   paymentStatus   String    @default("PENDIENTE")
   // Único: es la clave de idempotencia del webhook de Stripe. En Postgres los
   // NULL no colisionan entre sí, así que los bonos asignados a mano conviven.

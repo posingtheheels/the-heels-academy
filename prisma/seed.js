@@ -11,7 +11,7 @@ async function main() {
     {
       name: "Clase Individual Online",
       description: "Clase de 30 min vía videollamada",
-      price: 20,
+      price: 25,
       totalSessions: 1,
       type: "ONLINE",
       durationMinutes: 30,
@@ -19,7 +19,7 @@ async function main() {
     {
       name: "Bono 5 Clases Online",
       description: "Bono de 5 clases de 30 min vía videollamada",
-      price: 75,
+      price: 90,
       totalSessions: 5,
       type: "ONLINE",
       durationMinutes: 30,
@@ -27,7 +27,7 @@ async function main() {
     {
       name: "Bono 10 Clases Online",
       description: "Bono de 10 clases de 30 min vía videollamada",
-      price: 140,
+      price: 160,
       totalSessions: 10,
       type: "ONLINE",
       durationMinutes: 30,
@@ -35,7 +35,7 @@ async function main() {
     {
       name: "Clase Individual Presencial",
       description: "Clase de 1h presencial",
-      price: 35,
+      price: 50,
       totalSessions: 1,
       type: "PRESENCIAL",
       durationMinutes: 60,
@@ -43,7 +43,7 @@ async function main() {
     {
       name: "Bono 5 Clases Presencial",
       description: "Bono de 5 clases de 1h presencial",
-      price: 165,
+      price: 200,
       totalSessions: 5,
       type: "PRESENCIAL",
       durationMinutes: 60,
@@ -51,7 +51,7 @@ async function main() {
     {
       name: "Bono 10 Clases Presencial",
       description: "Bono de 10 clases de 1h presencial",
-      price: 300,
+      price: 360,
       totalSessions: 10,
       type: "PRESENCIAL",
       durationMinutes: 60,
