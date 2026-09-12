@@ -31,14 +31,24 @@ En Supabase → **Storage** → *New bucket*:
 | Name | `encuestas` |
 | Public bucket | **NO** (desmarcado) |
 | File size limit | `50 MB` (el tope global del proyecto en Supabase) |
-| Allowed MIME types | `video/mp4,video/quicktime,video/webm,video/x-matroska,video/3gpp` |
+| Allowed MIME types | ver abajo |
 
-Los MIME types van **separados por comas**, sin espacios ni saltos de línea: el
-campo de Supabase los parte por comas y si les pones espacios alrededor no
-reconoce el tipo.
+Los MIME types, **separados por comas y sin espacios**: el campo de Supabase los
+parte por comas y si les pones espacios alrededor no reconoce el tipo.
+
+```
+video/mp4,video/quicktime,video/webm,video/x-matroska,video/3gpp,image/jpeg,image/png,image/webp,image/heic,image/heif
+```
+
+Los cinco de imagen son para la comparativa antes/ahora. HEIC y HEIF entran
+aunque el navegador no sepa dibujarlos: son el formato por defecto del iPhone y
+rechazarlos dejaría fuera a media clase. El panel intenta mostrarlos y, si no
+puede, ofrece descargarlos.
 
 Los 50 MB no son una cifra elegida: es el límite global del proyecto, y el
 código (`MAX_VIDEO_BYTES` en `src/lib/encuesta.ts`) está puesto para coincidir.
+Las fotos tienen su propio tope de 15 MB (`MAX_FOTO_BYTES`), muy por debajo,
+porque una foto de móvil ronda los 2-5 MB y pasar de ahí sólo gasta cuota.
 Si algún día subes ese límite global en *Storage Settings*, cambia también esa
 constante — si el código permitiera más que el bucket, la subida reventaría al
 final en vez de avisar antes de empezar.
@@ -114,7 +124,7 @@ que ya te mete el enlace. Sustituye `{nombre}` por el de cada alumna.
 
 ## 3. Qué se pregunta y por qué
 
-Nueve pasos cortos. **Ninguna pregunta es obligatoria** y así se dice en la
+Diez pasos cortos. **Ninguna pregunta es obligatoria** y así se dice en la
 cabecera: una respuesta a medias vale más que una que nadie termina.
 
 ### Paso 1 · Quién eres
@@ -187,13 +197,28 @@ Va sola y al final a propósito. Sola, porque una caja grande sin nada al lado
 invita a escribir largo. Al final, porque para entonces ya ha recordado sus
 mejores momentos en los pasos anteriores y escribe desde ahí.
 
-### Paso 9 · Vídeo + permiso
+### Paso 9 · Antes y ahora
+Dos ranuras de foto, *Antes* y *Ahora*, en paralelo. Al subir la primera aparece
+un campo corto para el tiempo entre ellas (*"8 meses"*, *"de 2024 a hoy"*): es el
+dato que convierte dos fotos sueltas en una comparativa publicable.
+
+Cada foto muestra su miniatura en cuanto se sube, para que vea que ha elegido la
+que quería. Debajo, un aviso de que las fotos sólo las ves tú.
+
+El texto de la sección quita presión a propósito (*"como estén: no hacen falta ni
+luz de estudio ni bronceado de competición"*). Sin esa frase, la mayoría se salta
+el paso esperando a tener una foto mejor que nunca llega.
+
+### Paso 10 · Vídeo + permiso
 Botón para grabar o subir un vídeo (máximo 50 MB, con la cámara en calidad
 normal), con cuatro ideas de qué contar para que no se queden en blanco. Debajo
 del botón se avisa de que en 4K puede no caber, y si aun así se pasa, el error
 se lo dice antes de empezar a subir. Debajo, la casilla de autorización para
-publicarlo en web y redes: viene marcada, pero se puede desmarcar y entonces la
-respuesta sólo se usa internamente.
+publicar testimonio, fotos y vídeo en web y redes: viene marcada, pero se puede
+desmarcar y entonces la respuesta sólo se usa internamente.
+
+La casilla va en el último paso a propósito, después de las fotos: así cubre todo
+lo que ha subido y lo autoriza una sola vez, con todo delante.
 
 ---
 
@@ -203,9 +228,17 @@ respuesta sólo se usa internamente.
 - **Medias por apartado**: las ocho valoraciones en barras.
 - **Recuentos de las cerradas**: cómo te conocieron, qué quieren trabajar más y
   qué lanzamiento les interesa, ordenados por votos.
-- **Filtros**: todas / sin leer / con vídeo / listas para publicar.
-- **Ficha de cada respuesta**: reproduce el vídeo, muestra las notas, todo el
-  texto libre y lo que marcó, y permite **publicar como testimonio**.
+- **Filtros**: todas / sin leer / con vídeo / con fotos / listas para publicar.
+- **Ficha de cada respuesta**: reproduce el vídeo, enseña la comparativa
+  antes/ahora, las notas, todo el texto libre y lo que marcó, y permite
+  **publicar como testimonio**.
+
+Las fotos se abren a tamaño completo al pulsarlas. Si una no se puede dibujar
+(HEIC de iPhone), en su lugar sale un enlace para descargarla: el archivo está
+bien, es el navegador el que no sabe.
+
+Todo lo del bucket se sirve con enlaces firmados que caducan en una hora, así que
+si copias la URL de una foto y la mandas por ahí, deja de funcionar sola.
 
 Publicar crea un `Feedback` nuevo (el que sale en la landing) con el texto que
 tú edites antes de darle al botón. La encuesta original se queda intacta en el

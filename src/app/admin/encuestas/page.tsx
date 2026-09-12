@@ -14,6 +14,8 @@ import {
   Users,
   TrendingUp,
   AlertCircle,
+  ImageOff,
+  Images,
 } from "lucide-react";
 import {
   VALORACIONES,
@@ -71,7 +73,7 @@ export default function EncuestasAdminPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [abierta, setAbierta] = useState<Encuesta | null>(null);
-  const [filtro, setFiltro] = useState<"TODAS" | "NUEVA" | "VIDEO" | "PUBLICABLE">("TODAS");
+  const [filtro, setFiltro] = useState<"TODAS" | "NUEVA" | "VIDEO" | "FOTOS" | "PUBLICABLE">("TODAS");
   const [plantilla, setPlantilla] = useState(PLANTILLAS[0]);
   const [copiado, setCopiado] = useState(false);
 
@@ -108,6 +110,7 @@ export default function EncuestasAdminPage() {
   const encuestas = (datos?.encuestas || []).filter((e) => {
     if (filtro === "NUEVA") return e.status === "NUEVA";
     if (filtro === "VIDEO") return !!e.videoPath;
+    if (filtro === "FOTOS") return !!e.beforePhotoPath || !!e.afterPhotoPath;
     if (filtro === "PUBLICABLE") return e.allowPublish && e.status !== "PUBLICADA";
     return true;
   });
@@ -239,6 +242,7 @@ export default function EncuestasAdminPage() {
               { v: "TODAS", t: `Todas (${datos!.encuestas.length})` },
               { v: "NUEVA", t: `Sin leer (${m.sinLeer})` },
               { v: "VIDEO", t: `Con vídeo (${m.conVideo})` },
+              { v: "FOTOS", t: `Con fotos (${m.conFotos})` },
               { v: "PUBLICABLE", t: "Listas para publicar" },
             ].map((f) => (
               <button
@@ -291,6 +295,55 @@ function Tarjeta({ icono: Icono, valor, etiqueta }: any) {
       <p className="mt-3 font-heading text-3xl font-light text-charcoal">{valor}</p>
       <p className="mt-0.5 text-xs text-charcoal-lighter">{etiqueta}</p>
     </div>
+  );
+}
+
+/**
+ * Una foto de la comparativa.
+ *
+ * Si no carga, ofrece descargarla en vez de dejar un hueco roto: el iPhone sube
+ * HEIC y Chrome no sabe dibujarlo, pero el archivo está bien y se abre sin
+ * problema desde el ordenador.
+ */
+function Foto({ url, pie }: { url: string | null; pie: string }) {
+  const [falla, setFalla] = useState(false);
+
+  if (!url) {
+    return (
+      <div className="flex h-56 items-center justify-center rounded-2xl border border-dashed border-blush-200 text-xs text-charcoal-lighter">
+        Sin foto de «{pie.toLowerCase()}»
+      </div>
+    );
+  }
+
+  return (
+    <figure className="overflow-hidden rounded-2xl border border-blush-100">
+      {falla ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="flex h-56 flex-col items-center justify-center gap-2 bg-blush-50 px-4 text-center text-xs text-charcoal-light hover:bg-blush-100"
+        >
+          <ImageOff size={20} className="text-blush-500" />
+          El navegador no puede mostrarla (HEIC de iPhone).
+          <span className="font-medium underline">Descargar</span>
+        </a>
+      ) : (
+        <a href={url} target="_blank" rel="noreferrer">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={pie}
+            onError={() => setFalla(true)}
+            className="h-56 w-full bg-blush-50 object-cover"
+          />
+        </a>
+      )}
+      <figcaption className="bg-white px-3 py-2 text-xs text-charcoal-lighter">
+        {pie}
+      </figcaption>
+    </figure>
   );
 }
 
@@ -360,6 +413,10 @@ function Fila({ encuesta: e, onAbrir }: { encuesta: Encuesta; onAbrir: () => voi
       </div>
 
       {e.videoPath && <Video size={15} className="flex-shrink-0 text-blush-500" />}
+
+      {(e.beforePhotoPath || e.afterPhotoPath) && (
+        <Images size={15} className="flex-shrink-0 text-blush-500" />
+      )}
 
       {typeof e.ratingOverall === "number" && (
         <span className="flex flex-shrink-0 items-center gap-1 text-xs text-charcoal">
@@ -481,6 +538,23 @@ function Detalle({
                 playsInline
                 className="mb-6 w-full rounded-2xl bg-black"
               />
+            )}
+
+            {(e.beforePhotoUrl || e.afterPhotoUrl) && (
+              <div className="mb-6">
+                <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-charcoal-lighter">
+                  Antes y ahora
+                  {e.photosGap && (
+                    <span className="ml-2 normal-case tracking-normal text-charcoal-light">
+                      · {e.photosGap}
+                    </span>
+                  )}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Foto url={e.beforePhotoUrl} pie="Antes" />
+                  <Foto url={e.afterPhotoUrl} pie="Ahora" />
+                </div>
+              </div>
             )}
 
             {typeof e.nps === "number" && (

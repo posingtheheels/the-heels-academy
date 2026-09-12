@@ -184,11 +184,19 @@ model Survey {
   wantMore  String[] @default([])
   interests String[] @default([])
 
-  /// Ruta dentro del bucket privado "encuestas", no una URL publica: el video
-  /// se sirve siempre con enlace firmado desde el panel de admin.
+  /// Rutas dentro del bucket privado "encuestas", nunca URLs publicas: todo
+  /// se sirve con enlace firmado desde el panel de admin.
   videoPath String?
 
-  /// Consentimiento explicito para publicar texto y video en web y redes.
+  /// Comparativa antes/ahora que sube la alumna. Son fotos de su cuerpo, asi
+  /// que valen las mismas reglas que el video: bucket privado y publicacion
+  /// solo con allowPublish marcado.
+  beforePhotoPath String?
+  afterPhotoPath  String?
+  /// Tiempo entre las dos fotos, en sus palabras ("8 meses", "de 2024 a hoy").
+  photosGap       String?
+
+  /// Consentimiento explicito para publicar texto, video y fotos en web y redes.
   allowPublish Boolean @default(false)
 
   /// NUEVA | LEIDA | PUBLICADA

@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Video,
+  Image as ImageIcon,
   Trash2,
   Loader2,
   Check,
@@ -24,8 +25,11 @@ import {
   CANALES,
   TRABAJAR_MAS,
   INTERESES,
+  FOTOS,
   MAX_VIDEO_BYTES,
   TIPOS_VIDEO,
+  MAX_FOTO_BYTES,
+  TIPOS_FOTO,
 } from "@/lib/encuesta";
 
 /**
@@ -39,6 +43,7 @@ const PASOS = [
   ...BLOQUES_ABIERTOS.map((b) => ({ id: b.id, etiqueta: b.titulo })),
   { id: "mejoras", etiqueta: "Qué te gustaría" },
   { id: "coach", etiqueta: "Tu coach" },
+  { id: "fotos", etiqueta: "Antes y ahora" },
   { id: "video", etiqueta: "Tu vídeo" },
 ];
 
@@ -49,8 +54,14 @@ export default function EncuestaPage() {
   const [enviado, setEnviado] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
-  const [subiendoVideo, setSubiendoVideo] = useState(false);
-  const [nombreVideo, setNombreVideo] = useState("");
+  // Qué campo se está subiendo ahora mismo, y el nombre del archivo de cada uno.
+  // Van por campo y no con un booleano suelto porque hay tres ranuras (vídeo,
+  // foto de antes, foto de ahora) y el spinner tiene que salir sólo en la suya.
+  const [subiendo, setSubiendo] = useState<string | null>(null);
+  const [nombres, setNombres] = useState<Record<string, string>>({});
+  // Miniatura local de cada foto. Sale de URL.createObjectURL, no del bucket:
+  // asi se ve al instante y sin gastar una peticion firmada.
+  const [previos, setPrevios] = useState<Record<string, string>>({});
   const [r, setR] = useState<Respuestas>({ allowPublish: true });
 
   const set = (campo: string, valor: any) =>
@@ -76,34 +87,59 @@ export default function EncuestaPage() {
     [paso]
   );
 
-  const subirVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * Sube un archivo y deja su ruta en el campo indicado.
+   *
+   * El archivo no viaja al servidor: se pide una URL firmada y el navegador lo
+   * manda directo a Supabase. La validación se repite aquí y en el servidor a
+   * propósito: aquí para avisar antes de gastar datos del móvil, allí porque la
+   * del navegador se puede saltar.
+   */
+  const subir = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    tipo: "video" | "foto",
+    campo: string
+  ) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
 
     setError("");
 
-    if (!TIPOS_VIDEO.includes(file.type)) {
+    const esVideo = tipo === "video";
+    const tiposOk = esVideo ? TIPOS_VIDEO : TIPOS_FOTO;
+    const maximo = esVideo ? MAX_VIDEO_BYTES : MAX_FOTO_BYTES;
+    const mb = Math.round(maximo / (1024 * 1024));
+
+    // Algunos móviles mandan el tipo vacío al elegir de la galería; en ese caso
+    // dejamos que decida el servidor en vez de bloquear una subida válida.
+    if (file.type && !tiposOk.includes(file.type)) {
       setError(
-        "Ese formato de vídeo no me sirve. Graba con la cámara del móvil y vuelve a intentarlo."
+        esVideo
+          ? "Ese formato de vídeo no me sirve. Graba con la cámara del móvil y vuelve a intentarlo."
+          : "Ese formato de foto no me sirve. Sube una imagen normal (JPG o PNG) desde tu galería."
       );
       return;
     }
-    if (file.size > MAX_VIDEO_BYTES) {
+    if (file.size > maximo) {
       setError(
-        `El vídeo pesa demasiado (máximo ${Math.round(
-          MAX_VIDEO_BYTES / (1024 * 1024)
-        )} MB). Graba uno más corto, o baja la calidad de la cámara si la tienes en 4K.`
+        esVideo
+          ? `El vídeo pesa demasiado (máximo ${mb} MB). Graba uno más corto, o baja la calidad de la cámara si la tienes en 4K.`
+          : `La foto pesa demasiado (máximo ${mb} MB). Prueba con otra.`
       );
       return;
     }
 
-    setSubiendoVideo(true);
+    setSubiendo(campo);
     try {
-      const res = await fetch("/api/encuesta/video", {
+      const res = await fetch("/api/encuesta/subida", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentType: file.type, size: file.size }),
+        body: JSON.stringify({
+          tipo,
+          contentType: file.type || (esVideo ? "video/mp4" : "image/jpeg"),
+          size: file.size,
+        }),
       });
       const firma = await res.json();
       if (!res.ok) throw new Error(firma.error || "No he podido preparar la subida.");
@@ -114,13 +150,37 @@ export default function EncuestaPage() {
 
       if (errorSubida) throw errorSubida;
 
-      set("videoPath", firma.path);
-      setNombreVideo(file.name);
+      set(campo, firma.path);
+      setNombres((prev) => ({ ...prev, [campo]: file.name }));
+      if (tipo === "foto") {
+        setPrevios((prev) => ({ ...prev, [campo]: URL.createObjectURL(file) }));
+      }
     } catch (err: any) {
-      setError(err.message || "No he podido subir el vídeo. Inténtalo otra vez.");
+      setError(
+        err.message ||
+          (esVideo
+            ? "No he podido subir el vídeo. Inténtalo otra vez."
+            : "No he podido subir la foto. Inténtalo otra vez.")
+      );
     } finally {
-      setSubiendoVideo(false);
+      setSubiendo(null);
     }
+  };
+
+  /** Quita un archivo ya subido de su ranura. */
+  const quitar = (campo: string) => {
+    set(campo, null);
+    if (previos[campo]) URL.revokeObjectURL(previos[campo]);
+    setPrevios((prev) => {
+      const copia = { ...prev };
+      delete copia[campo];
+      return copia;
+    });
+    setNombres((prev) => {
+      const copia = { ...prev };
+      delete copia[campo];
+      return copia;
+    });
   };
 
   const enviar = async () => {
@@ -187,17 +247,26 @@ export default function EncuestaPage() {
             <PasoMejoras r={r} set={set} alternar={alternar} />
           )}
           {actual.id === "coach" && <PasoCoach r={r} set={set} />}
+          {actual.id === "fotos" && (
+            <PasoFotos
+              r={r}
+              set={set}
+              subiendo={subiendo}
+              nombres={nombres}
+              previos={previos}
+              onSubir={subir}
+              onQuitar={quitar}
+            />
+          )}
           {actual.id === "video" && (
             <PasoVideo
               r={r}
               set={set}
-              subiendo={subiendoVideo}
-              nombreVideo={nombreVideo}
-              onSubir={subirVideo}
-              onQuitar={() => {
-                set("videoPath", null);
-                setNombreVideo("");
-              }}
+              subiendo={subiendo}
+              nombres={nombres}
+              previos={previos}
+              onSubir={subir}
+              onQuitar={quitar}
             />
           )}
 
@@ -235,7 +304,7 @@ export default function EncuestaPage() {
               <button
                 type="button"
                 onClick={enviar}
-                disabled={enviando || subiendoVideo}
+                disabled={enviando || subiendo !== null}
                 className="inline-flex items-center gap-2 rounded-full bg-charcoal px-8 py-3 text-sm font-medium text-white transition-all hover:bg-charcoal-darkest disabled:opacity-50"
               >
                 {enviando ? (
@@ -562,21 +631,93 @@ function AreaTexto({
   );
 }
 
+type PropsSubida = {
+  r: Respuestas;
+  set: (c: string, v: any) => void;
+  subiendo: string | null;
+  nombres: Record<string, string>;
+  previos: Record<string, string>;
+  onSubir: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    tipo: "video" | "foto",
+    campo: string
+  ) => void;
+  onQuitar: (campo: string) => void;
+};
+
+function PasoFotos({
+  r,
+  subiendo,
+  nombres,
+  previos,
+  onSubir,
+  onQuitar,
+  set,
+}: PropsSubida) {
+  return (
+    <div>
+      <Titulo
+        texto="Tu antes y ahora"
+        ayuda="Si te apetece enseñar tu evolución, sube dos fotos. Como estén: no hacen falta ni luz de estudio ni bronceado de competición."
+      />
+
+      <div className="grid grid-cols-2 gap-3">
+        {FOTOS.map((f) => (
+          <Ranura
+            key={f.campo}
+            campo={f.campo}
+            tipo="foto"
+            titulo={f.titulo}
+            ayuda={f.ayuda}
+            valor={r[f.campo]}
+            nombre={nombres[f.campo]}
+            previo={previos[f.campo]}
+            subiendo={subiendo === f.campo}
+            bloqueada={subiendo !== null && subiendo !== f.campo}
+            onSubir={onSubir}
+            onQuitar={onQuitar}
+          />
+        ))}
+      </div>
+
+      {(r.beforePhotoPath || r.afterPhotoPath) && (
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-charcoal">
+            ¿Cuánto tiempo hay entre las dos?
+          </label>
+          <p className="mb-2 mt-0.5 text-xs text-charcoal-lighter">
+            Es el dato que más impresiona cuando se ven juntas
+          </p>
+          <input
+            type="text"
+            value={r.photosGap || ""}
+            onChange={(e) => set("photosGap", e.target.value)}
+            placeholder="8 meses, un año, de 2024 a hoy…"
+            maxLength={80}
+            className="w-full rounded-xl border border-blush-100 bg-blush-50/40 px-4 py-3 text-sm outline-none transition-colors focus:border-blush-300"
+          />
+        </div>
+      )}
+
+      <p className="mt-6 flex items-start gap-2 rounded-2xl bg-blush-50/60 px-5 py-4 text-xs leading-relaxed text-charcoal-light">
+        <ShieldCheck size={14} className="mt-0.5 flex-shrink-0 text-blush-500" />
+        Las fotos las veo sólo yo. No se publican en ningún sitio salvo que
+        marques la casilla del paso siguiente, y aun así te preguntaría antes de
+        usarlas.
+      </p>
+    </div>
+  );
+}
+
 function PasoVideo({
   r,
   set,
   subiendo,
-  nombreVideo,
+  nombres,
+  previos,
   onSubir,
   onQuitar,
-}: {
-  r: Respuestas;
-  set: (c: string, v: any) => void;
-  subiendo: boolean;
-  nombreVideo: string;
-  onSubir: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onQuitar: () => void;
-}) {
+}: PropsSubida) {
   return (
     <div>
       <Titulo
@@ -596,69 +737,22 @@ function PasoVideo({
         </ul>
       </div>
 
-      {r.videoPath ? (
-        <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-blush-200 bg-white px-5 py-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blush-100">
-              <Check size={16} className="text-blush-700" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-charcoal">Vídeo subido</p>
-              <p className="truncate text-xs text-charcoal-lighter">
-                {nombreVideo}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onQuitar}
-            className="flex-shrink-0 p-2 text-charcoal-lighter transition-colors hover:text-red-500"
-            aria-label="Quitar el vídeo"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      ) : (
-        <label
-          className={`mt-6 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blush-200 px-6 py-10 text-center transition-colors hover:border-blush-400 hover:bg-blush-50/40 ${
-            subiendo ? "pointer-events-none opacity-60" : ""
-          }`}
-        >
-          <input
-            type="file"
-            accept="video/*"
-            onChange={onSubir}
-            className="hidden"
-            disabled={subiendo}
-          />
-          {subiendo ? (
-            <>
-              <Loader2 size={26} className="animate-spin text-blush-500" />
-              <p className="mt-3 text-sm font-medium text-charcoal">
-                Subiendo tu vídeo…
-              </p>
-              <p className="mt-1 text-xs text-charcoal-lighter">
-                No cierres esta pantalla.
-              </p>
-            </>
-          ) : (
-            <>
-              <Video size={26} className="text-blush-500" />
-              <p className="mt-3 text-sm font-medium text-charcoal">
-                Grabar o subir un vídeo
-              </p>
-              <p className="mt-1 text-xs text-charcoal-lighter">
-                Máximo {Math.round(MAX_VIDEO_BYTES / (1024 * 1024))} MB · MP4,
-                MOV o WEBM
-              </p>
-              <p className="mt-1 text-xs text-charcoal-lighter">
-                Con la calidad normal de la cámara va perfecto. Si grabas en 4K
-                puede que no quepa.
-              </p>
-            </>
-          )}
-        </label>
-      )}
+      <div className="mt-6">
+        <Ranura
+          campo="videoPath"
+          tipo="video"
+          titulo="Grabar o subir un vídeo"
+          ayuda={`Máximo ${Math.round(MAX_VIDEO_BYTES / (1024 * 1024))} MB · MP4, MOV o WEBM. Con la calidad normal de la cámara va perfecto; si grabas en 4K puede que no quepa.`}
+          valor={r.videoPath}
+          nombre={nombres.videoPath}
+          previo={previos.videoPath}
+          subiendo={subiendo === "videoPath"}
+          bloqueada={subiendo !== null && subiendo !== "videoPath"}
+          alta
+          onSubir={onSubir}
+          onQuitar={onQuitar}
+        />
+      </div>
 
       <label className="mt-8 flex cursor-pointer items-start gap-3 rounded-2xl bg-blush-50/60 px-5 py-4">
         <input
@@ -668,12 +762,113 @@ function PasoVideo({
           className="mt-0.5 h-4 w-4 flex-shrink-0 accent-blush-500"
         />
         <span className="text-sm leading-relaxed text-charcoal-light">
-          Autorizo a The Heels a publicar mi testimonio y mi vídeo en su web y
-          redes sociales. Si desmarcas esta casilla lo guardo sólo para uso interno,
-          y puedes pedirme que lo borre cuando quieras.
+          Autorizo a The Heels a publicar mi testimonio, mis fotos y mi vídeo en
+          su web y redes sociales. Si desmarcas esta casilla lo guardo sólo para
+          uso interno, y puedes pedirme que lo borre cuando quieras.
         </span>
       </label>
     </div>
+  );
+}
+
+/** Una ranura de subida: vacía invita a elegir archivo, llena enseña qué hay. */
+function Ranura({
+  campo,
+  tipo,
+  titulo,
+  ayuda,
+  valor,
+  nombre,
+  previo,
+  subiendo,
+  bloqueada,
+  alta,
+  onSubir,
+  onQuitar,
+}: {
+  campo: string;
+  tipo: "video" | "foto";
+  titulo: string;
+  ayuda: string;
+  valor?: string | null;
+  nombre?: string;
+  previo?: string;
+  subiendo: boolean;
+  bloqueada: boolean;
+  alta?: boolean;
+  onSubir: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    tipo: "video" | "foto",
+    campo: string
+  ) => void;
+  onQuitar: (campo: string) => void;
+}) {
+  const Icono = tipo === "video" ? Video : ImageIcon;
+
+  if (valor) {
+    return (
+      <div className="overflow-hidden rounded-2xl border border-blush-200 bg-white">
+        {previo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previo}
+            alt={titulo}
+            className="h-40 w-full bg-blush-50 object-cover"
+          />
+        ) : (
+          <div className="flex h-20 items-center justify-center bg-blush-50">
+            <Check size={22} className="text-blush-700" />
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-2 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-charcoal">{titulo}</p>
+            <p className="truncate text-xs text-charcoal-lighter">{nombre}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onQuitar(campo)}
+            className="flex-shrink-0 p-1.5 text-charcoal-lighter transition-colors hover:text-red-500"
+            aria-label={`Quitar ${titulo}`}
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <label
+      className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blush-200 px-4 text-center transition-colors hover:border-blush-400 hover:bg-blush-50/40 ${
+        alta ? "py-10" : "py-8"
+      } ${subiendo || bloqueada ? "pointer-events-none opacity-60" : ""}`}
+    >
+      <input
+        type="file"
+        accept={tipo === "video" ? "video/*" : "image/*"}
+        onChange={(e) => onSubir(e, tipo, campo)}
+        className="hidden"
+        disabled={subiendo || bloqueada}
+      />
+      {subiendo ? (
+        <>
+          <Loader2 size={24} className="animate-spin text-blush-500" />
+          <p className="mt-3 text-sm font-medium text-charcoal">Subiendo…</p>
+          <p className="mt-1 text-xs text-charcoal-lighter">
+            No cierres esta pantalla.
+          </p>
+        </>
+      ) : (
+        <>
+          <Icono size={24} className="text-blush-500" />
+          <p className="mt-3 text-sm font-medium text-charcoal">{titulo}</p>
+          <p className="mt-1 text-xs leading-relaxed text-charcoal-lighter">
+            {ayuda}
+          </p>
+        </>
+      )}
+    </label>
   );
 }
 

@@ -255,6 +255,39 @@ export const BUCKET_VIDEOS = "encuestas";
  */
 export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
+/**
+ * Tope por foto. Una foto de movil ronda los 2-5 MB; 15 MB deja margen para
+ * las de camara buena sin acercarse al limite de 50 MB del bucket.
+ */
+export const MAX_FOTO_BYTES = 15 * 1024 * 1024;
+
+/**
+ * HEIC y HEIF entran a proposito aunque el navegador no sepa dibujarlos: son
+ * el formato por defecto del iPhone y rechazarlos dejaria fuera a media clase.
+ * El panel intenta mostrarlos y, si no puede, ofrece descargarlos.
+ */
+export const TIPOS_FOTO = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+];
+
+/** Las dos ranuras de la comparativa, en el orden en que se ven. */
+export const FOTOS = [
+  {
+    campo: "beforePhotoPath",
+    titulo: "Antes",
+    ayuda: "Cuando empezaste, o lo más cerca que tengas de aquel momento",
+  },
+  {
+    campo: "afterPhotoPath",
+    titulo: "Ahora",
+    ayuda: "Una foto reciente, de entreno o de tarima",
+  },
+] as const;
+
 export const TIPOS_VIDEO = [
   "video/mp4",
   "video/quicktime",

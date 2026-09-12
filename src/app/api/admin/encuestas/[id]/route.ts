@@ -6,6 +6,16 @@ import { BUCKET_VIDEOS } from "@/lib/encuesta";
 
 export const dynamic = "force-dynamic";
 
+/** Enlace temporal a un archivo del bucket privado. null si no hay archivo. */
+async function firmar(ruta: string | null): Promise<string | null> {
+  if (!ruta) return null;
+  const { data, error } = await supabaseAdmin.storage
+    .from(BUCKET_VIDEOS)
+    .createSignedUrl(ruta, 60 * 60);
+  if (error) console.error("Error firmando " + ruta + ":", error);
+  return data?.signedUrl || null;
+}
+
 /** Una respuesta concreta, con enlace firmado al vídeo si lo hay. */
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const noAutorizado = await bloquearSiNoEsAdmin();
@@ -20,18 +30,20 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: "No encontrada" }, { status: 404 });
     }
 
-    let videoUrl: string | null = null;
-    if (encuesta.videoPath) {
-      // El bucket es privado: el enlace caduca en una hora para que no acabe
-      // circulando por ahí un vídeo personal de una alumna.
-      const { data, error } = await supabaseAdmin.storage
-        .from(BUCKET_VIDEOS)
-        .createSignedUrl(encuesta.videoPath, 60 * 60);
-      if (error) console.error("Error firmando el vídeo:", error);
-      videoUrl = data?.signedUrl || null;
-    }
+    // El bucket es privado: los enlaces caducan en una hora para que no acabe
+    // circulando por ahí material personal de una alumna.
+    const [videoUrl, beforePhotoUrl, afterPhotoUrl] = await Promise.all([
+      firmar(encuesta.videoPath),
+      firmar(encuesta.beforePhotoPath),
+      firmar(encuesta.afterPhotoPath),
+    ]);
 
-    return NextResponse.json({ ...encuesta, videoUrl });
+    return NextResponse.json({
+      ...encuesta,
+      videoUrl,
+      beforePhotoUrl,
+      afterPhotoUrl,
+    });
   } catch (error) {
     console.error("Error obteniendo encuesta:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
@@ -122,13 +134,19 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "No encontrada" }, { status: 404 });
     }
 
-    // Primero el vídeo: si se borrase sólo la fila, el archivo se quedaría
-    // huérfano en el bucket sin nadie que sepa a quién pertenece.
-    if (encuesta.videoPath) {
+    // Primero los archivos: si se borrase sólo la fila, se quedarían huérfanos
+    // en el bucket sin nadie que sepa a quién pertenecen.
+    const archivos = [
+      encuesta.videoPath,
+      encuesta.beforePhotoPath,
+      encuesta.afterPhotoPath,
+    ].filter(Boolean) as string[];
+
+    if (archivos.length) {
       const { error } = await supabaseAdmin.storage
         .from(BUCKET_VIDEOS)
-        .remove([encuesta.videoPath]);
-      if (error) console.error("Error borrando el vídeo:", error);
+        .remove(archivos);
+      if (error) console.error("Error borrando los archivos:", error);
     }
 
     await (prisma as any).survey.delete({ where: { id: params.id } });

@@ -72,6 +72,7 @@ function calcularMetricas(encuestas: any[]) {
     total: encuestas.length,
     sinLeer: encuestas.filter((e) => e.status === "NUEVA").length,
     conVideo: encuestas.filter((e) => !!e.videoPath).length,
+    conFotos: encuestas.filter((e) => !!e.beforePhotoPath || !!e.afterPhotoPath).length,
     publicables: encuestas.filter((e) => e.allowPublish).length,
     medias,
     nps,

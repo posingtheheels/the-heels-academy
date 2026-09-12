@@ -25,6 +25,14 @@ const multiple = (opciones: readonly { valor: string }[]) =>
     .max(opciones.length)
     .optional();
 
+/** Sólo acepta rutas con la forma exacta que genera el endpoint de subida. */
+const rutaEn = (carpeta: string) =>
+  z
+    .string()
+    .regex(new RegExp("^" + carpeta + "/[A-Za-z0-9._-]{1,120}$"))
+    .optional()
+    .nullable();
+
 const esquema = z.object({
   name: z.string().trim().max(120).optional().nullable(),
   phone: z.string().trim().max(40).optional().nullable(),
@@ -32,18 +40,25 @@ const esquema = z.object({
   modality: z.enum(MODALIDADES.map((m) => m.valor) as [string, ...string[]]).optional().nullable(),
   discovery: z.enum(CANALES.map((c) => c.valor) as [string, ...string[]]).optional().nullable(),
   nps: z.coerce.number().int().min(0).max(10).optional().nullable(),
-  // La ruta del vídeo la firma /api/encuesta/video, así que aquí sólo aceptamos
-  // el formato que genera ese endpoint y nunca una URL arbitraria.
-  videoPath: z
-    .string()
-    .regex(/^videos\/[A-Za-z0-9._-]{1,120}$/)
-    .optional()
-    .nullable(),
+  // Las rutas las firma /api/encuesta/subida, así que aquí sólo aceptamos el
+  // formato que genera ese endpoint y nunca una URL arbitraria.
+  videoPath: rutaEn("videos"),
+  beforePhotoPath: rutaEn("fotos"),
+  afterPhotoPath: rutaEn("fotos"),
+  photosGap: z.string().trim().max(80).optional().nullable(),
   allowPublish: z.boolean().optional(),
   ...Object.fromEntries(VALORACIONES.map((v) => [v.campo, valoracion])),
   ...Object.fromEntries(CAMPOS_TEXTO.map((p) => [p.campo, texto])),
   ...Object.fromEntries(MULTIPLES.map((m) => [m.campo, multiple(m.opciones)])),
 });
+
+/** Marca en el asunto si trae material, que es lo que hace abrir el correo. */
+function adjuntos(datos: Record<string, any>): string {
+  const partes: string[] = [];
+  if (datos.videoPath) partes.push("vídeo");
+  if (datos.beforePhotoPath || datos.afterPhotoPath) partes.push("fotos");
+  return partes.length ? ` (con ${partes.join(" y ")})` : "";
+}
 
 /** Convierte "" en null para no llenar la tabla de cadenas vacías. */
 function limpiar(valor: unknown) {
@@ -81,7 +96,9 @@ export async function POST(req: NextRequest) {
       CAMPOS_TEXTO.some((p) => limpiar(d[p.campo])) ||
       MULTIPLES.some((m) => (d[m.campo] || []).length) ||
       d.nps !== undefined ||
-      !!d.videoPath;
+      !!d.videoPath ||
+      !!d.beforePhotoPath ||
+      !!d.afterPhotoPath;
 
     if (!tieneContenido) {
       return NextResponse.json(
@@ -98,6 +115,9 @@ export async function POST(req: NextRequest) {
       discovery: d.discovery ?? null,
       nps: d.nps ?? null,
       videoPath: d.videoPath ?? null,
+      beforePhotoPath: d.beforePhotoPath ?? null,
+      afterPhotoPath: d.afterPhotoPath ?? null,
+      photosGap: limpiar(d.photosGap),
       allowPublish: d.allowPublish === true,
     };
     VALORACIONES.forEach((v) => (datos[v.campo] = d[v.campo] ?? null));
@@ -146,7 +166,7 @@ async function avisarPorEmail(datos: Record<string, any>) {
     await resend.emails.send({
       from: "Encuestas The Heels <soporte@posingtheheels.com>",
       to: destinatario,
-      subject: `⭐ Nueva encuesta de ${escaparHtml(nombre)}${datos.videoPath ? " (con vídeo)" : ""}`,
+      subject: `⭐ Nueva encuesta de ${escaparHtml(nombre)}${adjuntos(datos)}`,
       html: `
         <div style="font-family:sans-serif;max-width:620px;margin:0 auto;padding:24px;border:1px solid #f0f0f0;border-radius:12px;">
           <h2 style="color:#333;border-bottom:2px solid #ffccd5;padding-bottom:10px;">Nueva respuesta al cuestionario</h2>
@@ -158,6 +178,7 @@ async function avisarPorEmail(datos: Record<string, any>) {
           ${filasValoracion ? `<table style="width:100%;border-collapse:collapse;margin:16px 0;">${filasValoracion}</table>` : ""}
           ${bloquesTexto}
           ${datos.videoPath ? `<p style="margin:20px 0 0;color:#B8436F;font-weight:600;">🎥 Ha grabado un vídeo. Míralo en el panel de admin.</p>` : ""}
+          ${datos.beforePhotoPath || datos.afterPhotoPath ? `<p style="margin:8px 0 0;color:#B8436F;font-weight:600;">📸 Ha subido su comparativa antes/ahora${datos.photosGap ? ` (${escaparHtml(datos.photosGap)})` : ""}.</p>` : ""}
           <p style="margin:8px 0 0;font-size:13px;color:#777;">
             Permiso para publicarlo: <strong>${datos.allowPublish ? "SÍ" : "no"}</strong>
           </p>
