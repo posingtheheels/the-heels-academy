@@ -16,6 +16,9 @@
 # production
 /build
 
+# scripts de usar y tirar: contienen credenciales e ids reales en claro
+/scratch
+
 # misc
 .DS_Store
 *.pem

@@ -9,25 +9,27 @@ datasource db {
 }
 
 model User {
-  id                String         @id @default(cuid())
+  id                String           @id @default(cuid())
   name              String
-  email             String         @unique
+  email             String           @unique
   phone             String?
   password          String
-  role              String         @default("USER")
+  role              String           @default("USER")
   stripeCustomerId  String?
   notes             String?
   category          String?
   federation        String?
-  resetToken        String?        @unique
+  resetToken        String?          @unique
   resetTokenExpires DateTime?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
   bookings          Booking[]
   notifications     Notification[]
   userPlans         UserPlan[]
   comments          Comment[]
   progressLogs      ProgressLog[]
+  enrollments       Enrollment[]
+  lessonProgress    LessonProgress[]
 }
 
 model Plan {
@@ -134,14 +136,81 @@ model Feedback {
   @@index([active])
 }
 
+/// Respuestas del cuestionario de satisfaccion que se envia por WhatsApp.
+/// Es la materia prima: de aqui salen las metricas internas y, con permiso
+/// explicito de la alumna, los testimonios publicos del modelo Feedback.
+model Survey {
+  id        String  @id @default(cuid())
+  name      String?
+  phone     String?
+  /// NUEVA | MESES_1_3 | MESES_3_6 | MESES_6_12 | MAS_1_ANO | ANTIGUA
+  seniority String?
+  /// PRESENCIAL | ONLINE | AMBAS
+  modality  String?
+  /// Como me conocio: INSTAGRAM | AMIGA | ENTRENADOR | GOOGLE | CAMPEONATO | OTRO
+  discovery String?
+
+  // Valoraciones de 1 a 5. Todas opcionales a proposito: una encuesta a medias
+  // sigue siendo util y obligar campos es la forma mas rapida de perderla.
+  ratingClasses    Int?
+  ratingTeacher    Int?
+  ratingTechnique  Int?
+  ratingFollowUp   Int?
+  ratingBooking    Int?
+  ratingValue      Int?
+  ratingProgress   Int?
+  ratingOverall    Int?
+
+  /// Recomendacion de 0 a 10 (NPS).
+  nps Int?
+
+  whyStarted      String? @db.Text
+  whyUs           String? @db.Text
+  surprise        String? @db.Text
+  bestPart        String? @db.Text
+  proudMoment     String? @db.Text
+  firstStageVsNow String? @db.Text
+  howChanged      String? @db.Text
+  beyondStage     String? @db.Text
+  peopleSay       String? @db.Text
+  toPastSelf      String? @db.Text
+  oneLiner        String? @db.Text
+  inOneWord       String? @db.Text
+  improvement     String? @db.Text
+  coachFeedback   String? @db.Text
+
+  /// Selecciones multiples. Listas escalares de Postgres: son valores
+  /// cerrados que solo se cuentan, no hace falta tabla aparte.
+  wantMore  String[] @default([])
+  interests String[] @default([])
+
+  /// Ruta dentro del bucket privado "encuestas", no una URL publica: el video
+  /// se sirve siempre con enlace firmado desde el panel de admin.
+  videoPath String?
+
+  /// Consentimiento explicito para publicar texto y video en web y redes.
+  allowPublish Boolean @default(false)
+
+  /// NUEVA | LEIDA | PUBLICADA
+  status              String  @default("NUEVA")
+  /// Id del Feedback creado al publicar la respuesta como testimonio.
+  publishedFeedbackId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
 model BlogPost {
-  id        String   @id @default(cuid())
-  title     String
-  slug      String   @unique
-  content   String   @db.Text
-  excerpt   String?  @db.Text
-  image     String?
-  category  String   @default("Culturismo")
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String    @db.Text
+  excerpt     String?   @db.Text
+  image       String?
+  category    String    @default("Culturismo")
   published   Boolean   @default(false) // Changed default to false for safety
   scheduledAt DateTime? // Added for future scheduling
   createdAt   DateTime  @default(now())
@@ -178,18 +247,17 @@ model AdminTask {
   @@index([date])
 }
 
-
 model ProgressLog {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String
-  content     String   @db.Text
-  imageUrl    String?
-  category    String   @default("GENERAL") // POSING, NUTRICION, EVOLUCION
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String   @db.Text
+  imageUrl  String?
+  category  String   @default("GENERAL") // POSING, NUTRICION, EVOLUCION
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([date])
@@ -201,4 +269,127 @@ model GlobalConfig {
   value     String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMACIÓN ACADEMY — formaciones grabadas on-demand.
+//
+// Línea de producto independiente de las clases: no usa Slot ni Booking, no
+// consume sesiones y no toca la agenda. Se compra, se accede y se ve.
+// Jerarquía: Course → CourseModule → Lesson.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Course {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  subtitle       String?
+  description    String   @db.Text
+  coverImage     String?
+  level          String   @default("TODOS") // INICIACION | INTERMEDIO | AVANZADO | TODOS
+  price          Float
+  // Precio tachado en la ficha (por ejemplo, la suma suelta frente al pack).
+  compareAtPrice Float?
+  stripePriceId  String?
+  // Suma de las lecciones. Se cachea para no recalcularla en cada listado.
+  durationMin    Int      @default(0)
+  published      Boolean  @default(false)
+  featured       Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  modules     CourseModule[]
+  enrollments Enrollment[]
+
+  @@index([published])
+}
+
+model CourseModule {
+  id       String  @id @default(cuid())
+  courseId String
+  title    String
+  summary  String?
+  order    Int     @default(0)
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([courseId])
+}
+
+model Lesson {
+  id            String  @id @default(cuid())
+  moduleId      String
+  title         String
+  // Markdown. Se renderiza con react-markdown, que ya usa el blog.
+  content       String? @db.Text
+  // Identificador del vídeo en el proveedor (Bunny). Nunca una URL reproducible:
+  // la URL firmada se pide en cada petición desde el endpoint que valida acceso.
+  videoProvider String? // VIMEO | BUNNY
+  videoId       String?
+  durationMin   Int     @default(0)
+  // Lección escaparate: visible sin haber comprado. Sustituye a un free trial.
+  free          Boolean @default(false)
+  order         Int     @default(0)
+
+  module    CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  resources LessonResource[]
+  progress  LessonProgress[]
+
+  @@index([moduleId])
+}
+
+model LessonResource {
+  id       String @id @default(cuid())
+  lessonId String
+  name     String
+  // Ruta dentro del bucket PRIVADO de Supabase. Se sirve con URL firmada de vida
+  // corta; nunca se guarda ni se expone una URL pública.
+  path     String
+  sizeKb   Int    @default(0)
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model Enrollment {
+  id              String    @id @default(cuid())
+  userId          String
+  courseId        String
+  source          String    @default("COMPRA") // COMPRA | BUNDLE | MEMBRESIA | REGALO
+  paymentStatus   String    @default("PAGADO")
+  // Misma clave de idempotencia que UserPlan: Stripe reintenta los webhooks y sin
+  // esto un reintento regalaría una segunda matrícula. Los NULL no colisionan en
+  // Postgres, así que las matrículas dadas a mano conviven sin problema.
+  stripeSessionId String?   @unique
+  amountPaid      Float?
+  createdAt       DateTime  @default(now())
+  // null = acceso de por vida, que es el caso por defecto. Igual que los bonos,
+  // las formaciones de The Heels no caducan.
+  expiresAt       DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+
+  // Una alumna no puede comprar dos veces la misma formación. El webhook trata el
+  // error P2002 como "ya matriculada", no como fallo.
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean  @default(false)
+  secondsSeen Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
 }
