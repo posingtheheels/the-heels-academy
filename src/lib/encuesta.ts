@@ -284,7 +284,7 @@ export const FOTOS = [
   {
     campo: "afterPhotoPath",
     titulo: "Ahora",
-    ayuda: "Una foto reciente, de entreno o de tarima",
+    ayuda: "Una foto actual",
   },
 ] as const;
 
