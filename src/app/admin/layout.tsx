@@ -20,7 +20,10 @@ import {
   List,
   MessageSquare,
   BookOpen, // Added
+  GraduationCap,
   ClipboardList,
+  Megaphone,
+  FileSignature,
 } from "lucide-react";
 
 const navItems = [
@@ -30,6 +33,9 @@ const navItems = [
   { href: "/admin/calendario", label: "Calendario", icon: Calendar },
   { href: "/admin/disponibilidad", label: "Disponibilidad", icon: Clock },
   { href: "/admin/tarifas", label: "Tarifas", icon: Tag },
+  { href: "/admin/formaciones", label: "Formaciones", icon: GraduationCap },
+  { href: "/admin/masterclass", label: "Masterclass", icon: Megaphone },
+  { href: "/admin/solicitudes", label: "Solicitudes", icon: FileSignature },
   { href: "/dashboard/blog", label: "Blog", icon: BookOpen }, // Added
   { href: "/admin/feedbacks", label: "Feedbacks", icon: MessageSquare },
   { href: "/admin/encuestas", label: "Encuestas", icon: ClipboardList },

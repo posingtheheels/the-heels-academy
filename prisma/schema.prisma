@@ -401,3 +401,114 @@ model LessonProgress {
   @@unique([userId, lessonId])
   @@index([userId])
 }
+
+// Inscripciones a la masterclass gratuita. Es la entrada del embudo: no son
+// alumnas todavia, asi que no cuelgan de User ni crean cuenta. Una fila por
+// persona y por edicion, porque la sesion se repite cada seis u ocho semanas
+// y hace falta saber quien vino a cual.
+model Lead {
+  id    String  @id @default(cuid())
+  name  String
+  /// Normalizado a minusculas antes de guardar: es la clave con la que se cruza
+  /// la lista con las compras y con las cuentas de alumna.
+  email String
+  phone String?
+
+  /// Edicion de la masterclass, en formato AAAA-MM-DD. La sesion se repite y
+  /// mezclar las listas haria imposible medir la asistencia de cada una.
+  edition String
+
+  /// IFBB | NAC | WABBA | WNBF | UIBBN | OTRA | NO_LO_SE
+  federation String?
+  /// BIKINI | WELLNESS | FIGURE | BODYFITNESS | NO_LO_SE
+  category   String?
+  /// El campo que decide el embudo entero: a quien se le ofrece Peak Week, a
+  /// quien la cohorte del programa y a quien no se le ofrece nada todavia.
+  /// ANTES_DE_ENERO | FEB_MAR | ABR_JUN | MAS_ADELANTE | NUNCA_HE_COMPETIDO
+  competeWhen String
+  /// Separa niveles al asignar cohorte: una novata absoluta en un grupo de tres
+  /// veteranas frustra a las cuatro.
+  hasCompeted Boolean @default(false)
+
+  /// Dos consentimientos distintos a proposito: uno es para escribirle y el otro
+  /// para que salga en la grabacion. Aceptar el primero no implica el segundo.
+  consentMarketing Boolean @default(false)
+  consentRecording Boolean @default(false)
+
+  /// De donde vino. Sin esto no hay forma de saber que canal llena la sala, que
+  /// es justo lo que abarata la siguiente edicion.
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  /// INSCRITA | ASISTIO | REPLAY | COMPRO | DESCARTADA
+  status String  @default("INSCRITA")
+  notes  String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Reinscribirse con el mismo correo corrige los datos, no crea una fila nueva.
+  @@unique([email, edition])
+  @@index([edition])
+  @@index([competeWhen])
+  @@index([status])
+}
+
+// Solicitudes para Camino a la Tarima, el programa en directo.
+//
+// No cuelga de User: quien solicita todavia no tiene cuenta, y crearsela antes
+// de la llamada de valoracion seria crear cuentas muertas. La cuenta se crea
+// cuando paga, por el flujo normal.
+model Application {
+  id    String  @id @default(cuid())
+  name  String
+  email String
+  phone String
+  age   Int?
+
+  /// IFBB | NAC | WABBA | WNBF | UIBBN | OTRA | NO_LO_SE
+  federation String?
+  /// BIKINI | WELLNESS | FIGURE | BODYFITNESS | NO_LO_SE
+  category   String?
+  /// GRUPO | INDIVIDUAL | NO_LO_SE
+  modality   String  @default("NO_LO_SE")
+
+  /// Fecha de su competicion. Es lo que decide la cohorte y el orden del
+  /// temario, asi que se guarda como fecha y no como texto libre.
+  competitionDate  DateTime?
+  competitionVenue String?
+
+  previousCompetitions String? @db.Text
+  preparedBy           String?
+  injuries             String? @db.Text
+  /// NINGUNA | POCA | MEDIA | MUCHA
+  heelExperience       String?
+  /// MANANA | MEDIODIA | TARDE | NOCHE | FINDE
+  availability         String[] @default([])
+  biggestFear          String?  @db.Text
+  seasonGoal           String?  @db.Text
+
+  /// Rutas en el bucket PRIVADO, nunca URLs publicas: son videos de su cuerpo
+  /// en bikini. Se sirven con enlace firmado desde el panel de admin.
+  videoPath            String?
+  competitionVideoPath String?
+
+  /// NUEVA | CONTACTADA | LLAMADA | ADMITIDA | PAGADA | DESCARTADA
+  status String  @default("NUEVA")
+  /// Cohorte asignada tras la llamada: INVIERNO | PRIMAVERA
+  cohort String?
+  /// Las tres cosas concretas que se le devuelven sobre su video.
+  callNotes String? @db.Text
+  notes     String? @db.Text
+
+  utmSource   String?
+  utmCampaign String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([competitionDate])
+  @@index([createdAt])
+}
