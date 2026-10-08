@@ -1,0 +1,71 @@
+@page { size: A4; margin: 14mm 14mm 12mm; }
+
+:root {
+  --blush-50:#FFF5F7; --blush-100:#FFECF0; --blush-200:#FFD6E0;
+  --blush-300:#F8C8DC; --blush-700:#B8436F;
+  --tinta:#2D2D2D; --tinta-2:#4A4A4A; --tinta-3:#6B6B6B;
+  --linea:#D8D2CF;
+}
+
+* { box-sizing: border-box; }
+body {
+  font-family: Inter, "Segoe UI", sans-serif;
+  font-size: 9.5pt; line-height: 1.45; color: var(--tinta-2); margin: 0;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+h1, h2, h3 { font-family: "Cormorant Garamond", Georgia, serif; color: var(--tinta); margin: 0; }
+
+/* Cabecera de hoja */
+.cab { display: flex; justify-content: space-between; align-items: flex-end;
+       border-bottom: 1.5px solid var(--blush-300); padding-bottom: 3mm; margin-bottom: 6mm; }
+.cab .marca { font-size: 6.5pt; letter-spacing: .35em; text-transform: uppercase; color: var(--tinta-3); }
+.cab .nombre { font-family:"Cormorant Garamond",serif; font-size: 13pt; font-weight:700;
+               letter-spacing:.06em; color: var(--tinta); line-height:1; }
+.cab h1 { font-size: 19pt; font-weight: 600; line-height: 1; text-align: right; }
+.cab .sub { font-size: 7.5pt; color: var(--tinta-3); text-align: right; margin-top: 1mm; }
+
+.intro { font-size: 8.5pt; color: var(--tinta-3); margin: 0 0 5mm; }
+
+h2 { font-size: 12pt; font-weight: 600; margin: 6mm 0 2mm; }
+h3 { font-size: 9.5pt; font-weight: 600; margin: 4mm 0 1.5mm;
+     font-family: Inter, sans-serif; letter-spacing:.1em; text-transform:uppercase;
+     color: var(--blush-700); font-size: 7pt; }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 6.5pt; letter-spacing: .12em; text-transform: uppercase;
+     color: var(--tinta); font-weight: 600; padding: 0 2mm 1.5mm 0;
+     border-bottom: 1px solid var(--blush-200); }
+td { padding: 2mm 2mm 2mm 0; border-bottom: 1px solid var(--linea); vertical-align: top; }
+td:last-child, th:last-child { padding-right: 0; }
+.der { text-align: right; white-space: nowrap; }
+
+/* Casillas 0-5 */
+.escala { white-space: nowrap; }
+.escala span { display: inline-block; width: 5.2mm; height: 5.2mm; line-height: 5mm;
+               text-align: center; border: 1px solid var(--blush-300); border-radius: 50%;
+               font-size: 7pt; color: var(--tinta-3); margin-right: 1mm; }
+
+/* Linea para escribir a mano */
+.rellenar { border-bottom: 1px solid var(--linea); display: inline-block; min-width: 25mm; }
+.caja-escribir { border: 1px solid var(--blush-200); border-radius: 2mm; min-height: 16mm; margin-top: 1.5mm; }
+.caja-escribir.alta { min-height: 26mm; }
+
+/* Casilla de verificacion */
+.chk { display: inline-block; width: 3.4mm; height: 3.4mm; border: 1px solid var(--tinta-3);
+       border-radius: .6mm; margin-right: 2mm; vertical-align: -0.3mm; }
+ul.marcar { list-style: none; padding: 0; margin: 0; column-gap: 8mm; }
+ul.marcar li { margin-bottom: 2.2mm; break-inside: avoid; }
+
+.dos-col { column-count: 2; column-gap: 8mm; }
+.tres-col { column-count: 3; column-gap: 6mm; }
+
+.nota { background: var(--blush-50); border-left: 2px solid var(--blush-300);
+        padding: 3mm 4mm; margin: 4mm 0; font-size: 8.5pt; }
+.nota strong { color: var(--tinta); }
+
+.pie { position: fixed; bottom: 0; left: 0; right: 0;
+       font-size: 6.5pt; color: var(--tinta-3); text-align: center;
+       border-top: 1px solid var(--linea); padding-top: 2mm; }
+
+.grande { font-family:"Cormorant Garamond",serif; font-size: 22pt; font-weight: 700;
+          color: var(--blush-300); line-height: 1; }
